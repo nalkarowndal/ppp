@@ -25,10 +25,28 @@ grep -Fq "package:" "$OUT/package_path.txt"
 adb logcat -c
 echo "EMULATOR TEST: cold launch"
 adb shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1 | tee "$OUT/launch.txt"
-sleep 12
+sleep 8
+# First-run Android immersive-mode system confirmation hides the entire Godot UI.
+# On Pixel 6 emulator (1080x2400), "Got it" is at approximately 85% x, 26% y.
+# Derive coordinates from the actual emulated screen dimensions.
+SCREEN_SIZE="$(adb shell wm size | grep -Eo '[0-9]+x[0-9]+' | head -1)"
+SCREEN_W="${SCREEN_SIZE%x*}"
+SCREEN_H="${SCREEN_SIZE#*x}"
+ACK_X="$((SCREEN_W * 85 / 100))"
+ACK_Y="$((SCREEN_H * 26 / 100))"
+adb shell input tap "$ACK_X" "$ACK_Y"
+echo "EMULATOR TEST: dismissed first-run fullscreen notice at $ACK_X,$ACK_Y" | tee "$OUT/immersive_notice.txt"
+sleep 9
 adb shell pidof "$PKG" | tee "$OUT/first_pid.txt"
 test -s "$OUT/first_pid.txt"
 adb exec-out screencap -p > "$OUT/first_launch.png"
+# In case an immersive system dialog remains, fail rather than treating its screenshot as the game.
+adb shell uiautomator dump /sdcard/astral_ui_dump.xml >/dev/null 2>&1 || true
+adb shell cat /sdcard/astral_ui_dump.xml > "$OUT/ui_hierarchy.xml" 2>/dev/null || true
+if grep -Fq "Viewing full screen" "$OUT/ui_hierarchy.xml"; then
+  echo "ANDROID EMULATOR FAIL: immersive notice still blocks Godot UI"
+  exit 1
+fi
 
 echo "EMULATOR TEST: force-stop and new process"
 adb shell am force-stop "$PKG"
