@@ -36,7 +36,7 @@ ACK_X="$((SCREEN_W * 85 / 100))"
 ACK_Y="$((SCREEN_H * 26 / 100))"
 adb shell input tap "$ACK_X" "$ACK_Y"
 echo "EMULATOR TEST: dismissed first-run fullscreen notice at $ACK_X,$ACK_Y" | tee "$OUT/immersive_notice.txt"
-sleep 9
+sleep 35
 adb shell pidof "$PKG" | tee "$OUT/first_pid.txt"
 test -s "$OUT/first_pid.txt"
 adb exec-out screencap -p > "$OUT/first_launch.png"
@@ -71,7 +71,13 @@ for name in sys.argv[1:]:
     print("EMULATOR SCREENSHOT PASS:", name, w, h)
 PY
 
+adb logcat -d -v time > "$OUT/full_logcat.txt" || true
+grep -Ei 'Godot|M1_UI_READY|AndroidRuntime|FATAL EXCEPTION|Fatal signal|SIGSEGV|SIGABRT' "$OUT/full_logcat.txt" > "$OUT/godot_diagnostics.txt" || true
 adb logcat -d -v time -s AndroidRuntime:E libc:F Godot:E > "$OUT/critical_logcat.txt" || true
+if ! grep -Fq "M1_UI_READY" "$OUT/full_logcat.txt"; then
+  echo "ANDROID EMULATOR FAIL: Godot main UI did not log readiness"
+  exit 1
+fi
 if grep -E "FATAL EXCEPTION|Fatal signal|SIGSEGV|SIGABRT" "$OUT/critical_logcat.txt"; then
   echo "ANDROID EMULATOR FAIL: fatal Android/app exception"
   exit 1
