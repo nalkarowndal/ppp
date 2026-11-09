@@ -81,9 +81,11 @@ jobs:
           fi
           mkdir -p qa_artifacts/visual
           for resolution in 360x800 360x900; do
+            height="${resolution#*x}"
+            sed -i -E "s@^window/size/viewport_height=[0-9]+@window/size/viewport_height=${height}@" project.godot
             LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a -s "-screen 0 1280x1024x24" \
               Godot_v4.7.2-stable_linux.x86_64 --path . \
-              --rendering-method gl_compatibility --resolution "$resolution" \
+              --rendering-method gl_compatibility \
               --write-movie "qa_artifacts/visual/main_${resolution}.png" \
               --fixed-fps 30 --quit-after 3 2>&1 | tee "qa_artifacts/visual/render_${resolution}.log"
             image="qa_artifacts/visual/main_${resolution}00000001.png"
@@ -93,6 +95,7 @@ jobs:
               exit 1
             fi
           done
+          git restore project.godot
 
       - name: Upload validation logs
         if: always()
