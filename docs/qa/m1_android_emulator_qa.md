@@ -35,3 +35,9 @@
 참고:
 - https://github.com/ReactiveCircus/android-emulator-runner
 - https://docs.godotengine.org/en/4.7/tutorials/export/exporting_for_android.html
+
+## 최초 실행 시각 QA에서 발견한 결함 (2026-11-09)
+
+최초 에뮬레이터 APK 실행 자체는 성공했으나, 첫 번째 PNG 캡처와 재실행 PNG에서 **Android OS 전체화면 안내(“Viewing full screen” / “Got it”)가 게임 UI를 가리고 있었음**을 직접 확인했다. 처음 자동 스모크 테스트는 PNG 구조만 확인해 이 문제를 발견하지 못했다.
+
+조치: ADB를 통해 해당 시스템 안내를 닫은 후 다시 캡처한다. UIAutomator에서 안내 문구가 남아 있다면 오류로 처리한다. 이 변경을 검증하는 신규 CI 결과와 PNG 수동 검사 전에는 **게임 화면 시각 QA PASS로 처리하지 않는다.**
