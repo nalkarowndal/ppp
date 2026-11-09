@@ -1,0 +1,135 @@
+name: M1 Android Emulator Runtime QA
+on:
+  push:
+    branches: [main, "test/**", "feature/**", "fix/**"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  emulator-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Install Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Enable KVM support for Android emulator
+        shell: bash
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Install official Godot 4.7.2 Linux editor
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 6 --retry-all-errors --retry-delay 5 \
+            "https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip" \
+            -o "$RUNNER_TEMP/godot.zip"
+          unzip -q "$RUNNER_TEMP/godot.zip" -d "$RUNNER_TEMP"
+          chmod +x "$RUNNER_TEMP/Godot_v4.7.2-stable_linux.x86_64"
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/Godot_v4.7.2-stable_linux.x86_64" --version
+
+      - name: Install Android SDK components and ephemeral debug signing key
+        shell: bash
+        run: |
+          set -euo pipefail
+          : "${ANDROID_HOME:?Missing Android SDK}"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_HOME" \
+            "platform-tools" "build-tools;35.0.1" "platforms;android-35"
+          keytool -genkeypair -v -keystore "$RUNNER_TEMP/ci-emulator-debug.keystore" \
+            -alias androiddebugkey -storepass android -keypass android \
+            -keyalg RSA -keysize 2048 -validity 3650 -dname "CN=Android Debug,O=Android,C=US"
+          echo "GODOT_ANDROID_KEYSTORE_DEBUG_PATH=$RUNNER_TEMP/ci-emulator-debug.keystore" >> "$GITHUB_ENV"
+          echo "GODOT_ANDROID_KEYSTORE_DEBUG_USER=androiddebugkey" >> "$GITHUB_ENV"
+          echo "GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD=android" >> "$GITHUB_ENV"
+
+      - name: Install official Godot Android debug template
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 6 --retry-all-errors --retry-delay 5 \
+            "https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz" \
+            -o "$RUNNER_TEMP/export_templates.tpz"
+          template_dir="$HOME/.local/share/godot/export_templates/4.7.2.stable"
+          mkdir -p "$template_dir"
+          python3 - "$RUNNER_TEMP/export_templates.tpz" "$template_dir" <<'PY'
+          from pathlib import Path
+          import sys, zipfile, shutil
+          archive, target = Path(sys.argv[1]), Path(sys.argv[2])
+          with zipfile.ZipFile(archive) as z:
+              entries = [x for x in z.namelist() if x.endswith("/android_debug.apk")]
+              if len(entries) != 1:
+                  raise RuntimeError("Godot official android_debug.apk template missing")
+              with z.open(entries[0]) as src, (target / "android_debug.apk").open("wb") as dst:
+                  shutil.copyfileobj(src, dst)
+          (target / "version.txt").write_text("4.7.2.stable", encoding="utf-8")
+          PY
+
+      - name: Export emulator-only x86_64 Android APK (do not alter arm64 preset in repository)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p builds qa_artifacts/emulator
+          cp export_presets.cfg "$RUNNER_TEMP/export_presets_original.cfg"
+          python3 - <<'PY'
+          from pathlib import Path
+          file = Path("export_presets.cfg")
+          data = file.read_text(encoding="utf-8")
+          assert 'architectures/arm64-v8a=true' in data
+          assert 'architectures/x86_64=false' in data
+          file.write_text(data.replace('architectures/arm64-v8a=true', 'architectures/arm64-v8a=false', 1).replace('architectures/x86_64=false', 'architectures/x86_64=true', 1), encoding="utf-8")
+          PY
+          Godot_v4.7.2-stable_linux.x86_64 --headless --path . --import 2>&1 | tee qa_artifacts/emulator/import.log
+          Godot_v4.7.2-stable_linux.x86_64 --headless --editor --path . \
+            --script res://tests/configure_android_ci.gd 2>&1 | tee qa_artifacts/emulator/configure.log
+          grep -Fq "ANDROID CONFIG PASS:" qa_artifacts/emulator/configure.log
+          Godot_v4.7.2-stable_linux.x86_64 --headless --path . \
+            --export-debug Android builds/astral-chronicle-m1-emulator-x86_64.apk \
+            2>&1 | tee qa_artifacts/emulator/export.log
+          test -s builds/astral-chronicle-m1-emulator-x86_64.apk
+          if grep -E 'SCRIPT ERROR|Parse Error|ERROR:' qa_artifacts/emulator/export.log; then exit 1; fi
+          "$ANDROID_HOME/build-tools/35.0.1/apksigner" verify --verbose \
+            builds/astral-chronicle-m1-emulator-x86_64.apk > qa_artifacts/emulator/apksigner.log
+          unzip -l builds/astral-chronicle-m1-emulator-x86_64.apk | grep 'lib/x86_64/' > /dev/null
+          cp "$RUNNER_TEMP/export_presets_original.cfg" export_presets.cfg
+          echo "EMULATOR APK EXPORT PASS: x86_64 / debug signed"
+
+      - name: Android 35 x86_64 emulator installation and startup QA
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect
+          script: bash scripts/qa/android_emulator_smoke.sh
+
+      - name: Upload emulator screenshots and runtime diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m1-android-emulator-runtime-qa
+          path: qa_artifacts/emulator/
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Upload emulator-only x86_64 debug APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m1-android-emulator-x86_64-debug-apk
+          path: builds/astral-chronicle-m1-emulator-x86_64.apk
+          retention-days: 14
+          if-no-files-found: error
