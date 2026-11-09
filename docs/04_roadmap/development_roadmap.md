@@ -62,3 +62,12 @@
 - 360×800 및 360×900 Xvfb OpenGL 렌더링 PNG 생성 및 실제 이미지 검수 완료: 한글 표시 정상, 기본 패널과 스크롤 배치 확인.
 - 검증 기록: [Godot M1 Runtime Validation](https://github.com/nalkarowndal/ppp/actions/runs/42575430523), [QA 상세](../qa/m1_runtime_validation.md).
 - Android 실기기 실행, 수동 터치·실제 앱 재시작 저장 검증 및 플랫폼 독립 폰트 번들은 아직 미검증/미구현. **M1 최종 승인 보류**, 이슈 #2 유지.
+
+## 2026-11-09 M1 플랫폼 자동 검증 결과 (PR #4)
+
+- **Windows:** 공식 Godot 4.7.2 Windows 엔진으로 Import/Smoke/UI/별도 OS 프로세스 사이 `user://` 저장·읽기/헤드리스 메인 씬 실행 모두 통과.
+- **Android:** Godot 4.7.2 공식 템플릿, JDK 17, Android SDK 35로 arm64 디버그 APK 생성·v2/v3 서명·패키지명 확인 통과. 패키징/보관용 Artifact 제공.
+- **Linux:** 기존 Import/Smoke/2종 렌더링 CI 재검증 통과.
+- 성공 기록: [Windows Actions](https://github.com/nalkarowndal/ppp/actions/runs/42577123154), [Android Actions](https://github.com/nalkarowndal/ppp/actions/runs/42577123146).
+- 추가 임시 에셋: 게임 정식 아트가 아닌 자체 제작 개발용 `assets/icon.svg`.
+- **미검증:** 실제 Android 기기 설치·실행·터치·안전 영역·완전 종료 후 복구·한글 폰트, Windows GUI 수동 사용성. 공식 M1 승인 및 M2 진입은 여전히 보류. [검수 계획](../qa/m1_platform_validation_plan.md).

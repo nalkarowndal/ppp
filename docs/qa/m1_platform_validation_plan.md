@@ -51,3 +51,21 @@ M1은 위 플랫폼 실기기·GUI 검수가 남아 있는 동안 최종 승인 
 
 - ETC2/ASTC 설정 추가 후 APK 내보내기가 압축·서명·검증 단계까지 완료되었으나, `No project icon specified`가 Godot의 `ERROR:`로 출력되어 CI 실패.
 - 자체 제작 개발용 `assets/icon.svg`를 추가하고 `application/config/icon`에 지정한 다음 재검증한다.
+
+## 2026-11-09 실제 자동검증 성공 결과
+
+| 테스트 | 상태 | 증거 |
+|---|---|---|
+| Windows 공식 엔진 임포트·Smoke | **PASS** | [Windows CI #42577123154](https://github.com/nalkarowndal/ppp/actions/runs/42577123154) |
+| Windows UI 버튼·개발용 저장 | **PASS** | `UI INTEGRATION PASS` |
+| Windows 프로세스 완전 종료 후 저장 복원 | **PASS** | `SAVE PROCESS WRITE/READ PASS` (별도 Godot 프로세스) |
+| Android APK 내보내기 | **PASS** | [Android CI #42577123146](https://github.com/nalkarowndal/ppp/actions/runs/42577123146) |
+| Android 디버그 APK 서명 및 패키지 검사 | **PASS** | v2/v3 Verify; `org.astralchronicle.prototype`, `arm64-v8a` 확인 |
+| Android 실제 기기에서 실행 | **NOT TESTED** | 별도 실기기 필요 |
+| Windows GUI 수동 클릭 | **NOT TESTED** | Windows CI는 Headless 검증 |
+
+**Android APK 아티팩트:** 위 성공 CI의 `astral-chronicle-m1-android-debug-apk`에서 다운로드. GitHub Actions ZIP은 일정 보관 기간 후 만료될 수 있음.
+
+**알려진 엔진 진단:** Godot `--headless --editor --script`로 Android SDK 경로를 설정할 때, 에디터 종료 시 `RID allocations ... leaked at exit` 경고/오류가 기록됨. 실제 APK export 프로세스의 로그와 서명 검증은 성공했지만, 이 **설정 스크립트 종료 진단은 별도 개선/회귀 관리 필요**하며 실게임 런타임 오류와 혼동해서는 안 됨.
+
+**기기 설치 주의:** 이번 테스트는 빌드마다 새 임시 디버그 키를 생성함. 기존 기기에 동일 패키지명으로 다른 키의 APK가 설치되어 있다면 삭제 후 재설치가 필요하며, 삭제 시 개발용 데이터도 사라질 수 있음.

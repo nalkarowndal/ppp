@@ -39,3 +39,11 @@ CI 실패 시 병합 금지. CI 미구성 또는 실행 결과 없는 경우 **�
 - 결과: https://github.com/nalkarowndal/ppp/actions/runs/42575430523
 - 상세: [M1 실행 QA](m1_runtime_validation.md).
 - 미완료: Android APK 실기기, 실제 터치, 앱 완전 재시작, 기기별 한글 글꼴. 따라서 M1 승인 게이트 **미통과**.
+
+## M1 Windows/Android 플랫폼 CI 추가 검증 (2026-11-09)
+
+- Windows Godot 4.7.2 native `--import`, Smoke, UI 테스트: PASS.
+- OS 프로세스가 완전히 종료된 이후 별도 프로세스에서 `user://` 디버그 저장 복원: PASS. 이는 Android 기기 재실행 검증을 대체하지 않음.
+- Android arm64 Debug APK 생성/서명/패키지: PASS, **실기기 설치 및 동작은 미검증**.
+- 워크플로우: [Windows](https://github.com/nalkarowndal/ppp/actions/runs/42577123154), [Android](https://github.com/nalkarowndal/ppp/actions/runs/42577123146).
+- M1 최종 승인: **보류** (Android 실기기, 터치·안전 영역, 플랫폼 글꼴, Windows 수동 GUI 포함).
