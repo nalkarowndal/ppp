@@ -1,0 +1,59 @@
+name: M1 Windows Native Runtime
+on:
+  push:
+    branches: [main, "feature/**", "fix/**"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  windows-headless:
+    runs-on: windows-latest
+    timeout-minutes: 18
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install official Godot Windows 4.7.2
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $archive = Join-Path $env:RUNNER_TEMP "godot_windows.zip"
+          $destination = Join-Path $env:RUNNER_TEMP "godot_windows"
+          Invoke-WebRequest -Uri "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_win64.exe.zip" -OutFile $archive
+          Expand-Archive -Path $archive -DestinationPath $destination -Force
+          $godot = Get-ChildItem -Path $destination -Recurse -Filter "*_console.exe" | Select-Object -First 1
+          if (-not $godot) { throw "Godot console executable not found" }
+          "GODOT_BIN=$($godot.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          & $godot.FullName --version
+          if ($LASTEXITCODE -ne 0) { throw "Godot --version failed" }
+      - name: Import and test on Windows native engine
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          New-Item -ItemType Directory -Force -Path qa_artifacts | Out-Null
+          function RunGodot([string] $label, [string[]] $params) {
+            $log = Join-Path "qa_artifacts" "$label.log"
+            & $env:GODOT_BIN @params 2>&1 | Tee-Object -FilePath $log
+            if ($LASTEXITCODE -ne 0) { throw "$label failed (exit $LASTEXITCODE)" }
+            if (Select-String -Path $log -Pattern 'SCRIPT ERROR','Parse Error','ERROR:') { throw "$label emitted errors" }
+          }
+          RunGodot "import" @("--headless", "--path", ".", "--import")
+          RunGodot "smoke" @("--headless", "--path", ".", "--script", "res://tests/smoke_test.gd")
+          RunGodot "ui" @("--headless", "--path", ".", "--script", "res://tests/ui_integration_test.gd")
+          RunGodot "save_write" @("--headless", "--path", ".", "--script", "res://tests/save_process_test.gd", "--", "write")
+          RunGodot "save_read" @("--headless", "--path", ".", "--script", "res://tests/save_process_test.gd", "--", "read")
+          RunGodot "main" @("--headless", "--path", ".", "--quit-after", "3")
+          if (-not (Select-String -Path "qa_artifacts/save_read.log" -SimpleMatch "SAVE PROCESS READ PASS:")) {
+            throw "Save process round-trip did not pass"
+          }
+          Write-Host "WINDOWS M1 PASS: imports, scripts, UI, separate-process save"
+      - name: Upload Windows test logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: m1-windows-test-logs
+          path: qa_artifacts/
+          if-no-files-found: ignore
+          retention-days: 14
