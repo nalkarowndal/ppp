@@ -46,3 +46,34 @@
 - 한글이 네모 글리프로 출력됨. 테스트 러너에 Noto Sans CJK 폰트가 없는 상태에서 기본 글꼴이 한국어를 지원하지 않아 발생. Godot SystemFont 우선 후보를 명시하고 CI에서 공개 한국어 글꼴 패키지를 설치한 후 `has_char(한)` 검사 추가.
 - SystemFont는 Android 벤더별로 동작이 불안정할 수 있어 최종 Android 배포 전 프로젝트에 OFL 등 재배포 가능한 폰트를 별도 포함하도록 **추가 출하 게이트** 지정.
 - 두 문제 수정 후 실제 PNG를 다시 눈으로 확인해야만 시각 QA를 통과시킬 수 있다.
+
+
+## 2026-11-09 엔진 및 렌더 검증 실행 결과
+
+**검증 커밋:** `4d4ab812d98ddcee68838a3aa6895b0e2235f138`  
+**GitHub Actions:** https://github.com/nalkarowndal/ppp/actions/runs/42575124987
+
+| 검수 | 결과 | 확인 근거 |
+|---|---|---|
+| Godot 4.7.2 공식 실행 | PASS | Godot Engine v4.7.2.stable.official |
+| 임포트 및 스크립트 파싱 | PASS | import 로그, 자동 Job 성공 |
+| 전투 계산 / 시드 재현 | PASS | SMOKE PASS |
+| UI 버튼 연결 / 저장·복원 | PASS | UI INTEGRATION PASS |
+| 헤드리스 메인 씬 시작 | PASS | `--quit-after 3` |
+| 화면 렌더 360×800 | PASS (가상 디스플레이) | 출력 PNG 360×800 확인 |
+| 화면 렌더 360×900 | PASS (가상 디스플레이) | 출력 PNG 360×900 확인 |
+| 한글 글리프 | PASS (CI Linux) | Noto Sans CJK KR 설치 후 `Font.has_char` 검사 및 PNG 수동 확인 |
+| 시각적 잘림·카드 겹침 | PASS (M1 임시 화면 한정) | 두 PNG 직접 검토, 목록은 ScrollContainer 내 스크롤 |
+| 물리 Android 기기·터치 | **NOT TESTED** | 기기 빌드/실행 필요 |
+| 플랫폼 독립 폰트 번들 | **NOT IMPLEMENTED** | SystemFont는 Android 벤더별로 차이 있을 수 있음 |
+| 앱 완전 종료·재실행 수동 테스트 | **NOT TESTED** | Headless 스크립트의 저장 재생성만 검증됨 |
+
+### 남은 M1 검수
+
+- [ ] Android 디버그 빌드 생성 및 실기기 설치·실행
+- [ ] 실제 터치로 버튼 1턴/초기화/저장 동작 확인
+- [ ] 앱 종료 후 재실행 및 저장 UI 정상 복구
+- [ ] Android에서 한글 폰트 호환성 확인; 필요 시 프로젝트 번들형 오픈 라이선스 폰트 도입
+- [ ] 모바일 안전 영역·실제 기기 DPI·화면 회전 동작 검증
+
+M1은 **최종 승인 보류**. PR을 병합하더라도 이슈 #2는 열어 두고 미완료 항목을 추적한다.
