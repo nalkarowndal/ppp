@@ -36,3 +36,13 @@ GitHub Actions에서 Godot 4.7.2의 Linux·Windows 엔진 테스트 및 Android 
 - [플랫폼 검수 범위·실기기 체크리스트](docs/qa/m1_platform_validation_plan.md)
 
 APK 다운로드: 위 Android workflow에서 성공한 실행을 열고 **Artifacts → astral-chronicle-m1-android-debug-apk**를 내려받아 ZIP 안의 `astral-chronicle-m1-debug.apk`를 확인합니다. 디버그 APK는 **게임 데모·정식 배포본이 아니며**, 임시 UI와 1턴 샌드박스만 포함합니다. CI 빌드마다 임시 디버그 키가 달라 기존 앱 업데이트 설치에 실패할 수 있으므로 개발용 기기에서 기존 앱을 삭제하고 설치해야 할 수 있습니다.
+
+## Windows 데스크톱 실행 파일
+
+Godot 없이 실행할 수 있는 Windows x64 개발용 `.exe`가 GitHub Actions로 자동 빌드됩니다.
+
+- [Windows Desktop Executable 빌드](https://github.com/nalkarowndal/ppp/actions/workflows/m1-windows-desktop-export.yml)에서 성공 실행의 `astral-chronicle-m1-windows-x64` 아티팩트 ZIP 다운로드
+- ZIP을 해제한 뒤 `AstralChronicle-M1-Windows-x64.exe` 실행
+- Godot 게임 리소스는 실행 파일에 포함되어 있어 별도 `.pck` 파일이 필요하지 않습니다.
+- **주의:** 개발용 디버그 실행 파일이며 코드 서명되지 않았습니다. Windows SmartScreen 경고가 표시될 수 있습니다. 정식 게임/완성 MVP가 아닙니다.
+- [플랫폼 검증 계획 및 남은 실기기 QA](docs/qa/m1_platform_validation_plan.md)

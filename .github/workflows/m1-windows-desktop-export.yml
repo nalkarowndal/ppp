@@ -1,0 +1,123 @@
+name: M1 Windows Desktop Executable
+on:
+  push:
+    branches: [main, "feature/**", "fix/**"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  windows-export:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Install official Godot 4.7.2 Windows editor
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $archive = Join-Path $env:RUNNER_TEMP "godot_windows.zip"
+          $directory = Join-Path $env:RUNNER_TEMP "godot_windows"
+          Invoke-WebRequest -Uri "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_win64.exe.zip" -OutFile $archive
+          Expand-Archive -LiteralPath $archive -DestinationPath $directory -Force
+          $editor = Get-ChildItem -LiteralPath $directory -Recurse -Filter "*_console.exe" | Select-Object -First 1
+          if ($null -eq $editor) { throw "Godot console editor is missing" }
+          "GODOT_BIN=$($editor.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          & $editor.FullName --version
+          if ($LASTEXITCODE -ne 0) { throw "Godot version check failed" }
+
+      - name: Extract official Windows x64 debug export templates
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $archive = Join-Path $env:RUNNER_TEMP "godot_templates.tpz"
+          $templates = Join-Path $env:APPDATA "Godot/export_templates/4.7.2.stable"
+          New-Item -ItemType Directory -Path $templates -Force | Out-Null
+          Invoke-WebRequest -Uri "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz" -OutFile $archive
+          Add-Type -AssemblyName System.IO.Compression
+          $zip = [System.IO.Compression.ZipFile]::OpenRead($archive)
+          try {
+            foreach ($file in @("windows_debug_x86_64.exe", "windows_debug_x86_64_console.exe")) {
+              $entry = $zip.Entries | Where-Object { $_.Name -eq $file } | Select-Object -First 1
+              if ($null -eq $entry) { throw "Missing official export template: $file" }
+              $destination = Join-Path $templates $file
+              [System.IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $destination, $true)
+            }
+          } finally {
+            $zip.Dispose()
+          }
+          Set-Content -LiteralPath (Join-Path $templates "version.txt") -Value "4.7.2.stable" -Encoding ascii
+          Get-ChildItem -LiteralPath $templates | Select-Object Name,Length
+
+      - name: Import and export runnable Windows EXE with embedded PCK
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          New-Item -ItemType Directory -Force "builds", "qa_artifacts" | Out-Null
+          & $env:GODOT_BIN --headless --path . --import 2>&1 | Tee-Object -FilePath "qa_artifacts/desktop_import.log"
+          if ($LASTEXITCODE -ne 0) { throw "Godot import failed" }
+          if (Select-String -Path "qa_artifacts/desktop_import.log" -Pattern 'SCRIPT ERROR','Parse Error','ERROR:') { throw "Godot import had errors" }
+          & $env:GODOT_BIN --headless --path . --export-debug "Windows Desktop" "builds/AstralChronicle-M1-Windows-x64.exe" 2>&1 | Tee-Object -FilePath "qa_artifacts/desktop_export.log"
+          if ($LASTEXITCODE -ne 0) { throw "Godot desktop export failed" }
+          if (Select-String -Path "qa_artifacts/desktop_export.log" -Pattern 'SCRIPT ERROR','Parse Error','ERROR:') { throw "Godot desktop export had errors" }
+          $exe = Join-Path (Get-Location) "builds/AstralChronicle-M1-Windows-x64.exe"
+          if (-not (Test-Path -LiteralPath $exe)) { throw "Exported executable not found" }
+          if ((Get-Item -LiteralPath $exe).Length -lt 1000000) { throw "EXE unexpectedly small" }
+          if ((Get-ChildItem -LiteralPath "builds" -Filter "*.pck").Count -gt 0) { throw "Embedded PCK requested, but external PCK found" }
+          $header = [System.IO.File]::ReadAllBytes($exe)
+          if ($header[0] -ne 77 -or $header[1] -ne 90) { throw "EXE does not have a PE MZ signature" }
+          Get-FileHash -LiteralPath $exe -Algorithm SHA256 | Format-List | Out-File -FilePath "qa_artifacts/windows-exe-sha256.txt"
+          "DESKTOP EXPORT PASS: single-file Windows x64 executable with embedded PCK"
+
+      - name: Execute exported EXE without Godot project directory
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $exe = (Resolve-Path "builds/AstralChronicle-M1-Windows-x64.exe").Path
+          Push-Location "builds"
+          try {
+            & $exe --headless --quit-after 3 2>&1 | Tee-Object -FilePath "../qa_artifacts/exported_exe_run.log"
+            if ($LASTEXITCODE -ne 0) { throw "Exported EXE runtime failed" }
+          } finally {
+            Pop-Location
+          }
+          if (Select-String -Path "qa_artifacts/exported_exe_run.log" -Pattern 'SCRIPT ERROR','Parse Error','ERROR:') { throw "Exported EXE runtime errors" }
+          "DESKTOP EXECUTABLE RUN PASS"
+
+      - name: Add user readme to portable bundle
+        shell: pwsh
+        run: |
+          @'
+          ASTRAL CHRONICLE - M1 Windows Prototype
+          =====================================
+          1. Run AstralChronicle-M1-Windows-x64.exe on Windows 10/11 x64.
+          2. Godot is not required. Game data is embedded in this EXE.
+          3. This is an UNSIGNED DEVELOPMENT BUILD, not a complete game.
+          4. Current gameplay is a temporary UI and 1-turn debug battle.
+          5. Antivirus/SmartScreen may warn because the binary is unsigned.
+          6. Save data is development-only (user://), not a production save.
+          Source: https://github.com/nalkarowndal/ppp
+          '@ | Set-Content -LiteralPath "builds/README-Windows.txt" -Encoding utf8
+
+      - name: Upload runnable Windows executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: astral-chronicle-m1-windows-x64
+          path: |
+            builds/AstralChronicle-M1-Windows-x64.exe
+            builds/README-Windows.txt
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Upload desktop export and launch logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m1-windows-desktop-export-logs
+          path: qa_artifacts/
+          retention-days: 14
+          if-no-files-found: ignore

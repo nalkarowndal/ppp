@@ -69,3 +69,11 @@ M1은 위 플랫폼 실기기·GUI 검수가 남아 있는 동안 최종 승인 
 **알려진 엔진 진단:** Godot `--headless --editor --script`로 Android SDK 경로를 설정할 때, 에디터 종료 시 `RID allocations ... leaked at exit` 경고/오류가 기록됨. 실제 APK export 프로세스의 로그와 서명 검증은 성공했지만, 이 **설정 스크립트 종료 진단은 별도 개선/회귀 관리 필요**하며 실게임 런타임 오류와 혼동해서는 안 됨.
 
 **기기 설치 주의:** 이번 테스트는 빌드마다 새 임시 디버그 키를 생성함. 기존 기기에 동일 패키지명으로 다른 키의 APK가 설치되어 있다면 삭제 후 재설치가 필요하며, 삭제 시 개발용 데이터도 사라질 수 있음.
+
+## Windows Desktop EXE 내보내기 검증 추가
+
+- Godot 4.7.2 공식 Windows 엔진+공식 Windows x64 Debug Export Template.
+- `export_presets.cfg` 의 `Windows Desktop` 및 `binary_format/embed_pck=true` 사용, 파일은 `builds/AstralChronicle-M1-Windows-x64.exe`.
+- 실제 PE (MZ) 시그니처, 별도 PCK 미생성, EXE 크기, SHA-256 및 실행 파일을 별도 `builds` 경로에서 헤드리스 실행하는지 검증.
+- 통과 시 GitHub Actions `astral-chronicle-m1-windows-x64` 아티팩트 ZIP 생성.
+- **남은 검증:** Windows 사용자 화면의 직접 클릭, 한글 표시, 다중 모니터/해상도, 사용자별 SmartScreen 동작 등은 자동 Headless 빌드만으로 판정할 수 없음.
