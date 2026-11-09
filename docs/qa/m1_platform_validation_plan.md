@@ -39,3 +39,10 @@ M1은 위 플랫폼 실기기·GUI 검수가 남아 있는 동안 최종 승인 
 - [Godot 4.7 Android Export](https://docs.godotengine.org/en/4.7/tutorials/export/exporting_for_android.html)
 - [Godot 4.7 CLI Export](https://docs.godotengine.org/en/4.7/tutorials/editor/command_line_tutorial.html)
 - [Godot 4.7 EditorSettings](https://docs.godotengine.org/en/4.7/classes/class_editorsettings.html)
+
+## 2026-11-09 1차 CI 실행 결과
+
+- **Windows CI 통과:** 공식 Godot 4.7.2 Windows 엔진으로 임포트, 수식, UI 시그널, 별도 프로세스 저장·복원, 메인 씬 헤드리스 실행 성공.
+- **Android 최초 APK 실패:** SDK·JDK·디버그 서명 및 템플릿은 준비되었으나 `ETC2/ASTC texture compression is required for Android export` 오류가 발생.
+- 조치: `project.godot` [rendering]의 `textures/vram_compression/import_etc2_astc=true` 추가. 이는 Android 전용 텍스처 포맷 임포트를 활성화하는 설정이며 픽셀 스프라이트에 무조건 VRAM 압축을 강제하는 것이 아님.
+- 최신 CI에서 APK 생성과 서명 검증을 재확인한 뒤 승인 판정 예정.
