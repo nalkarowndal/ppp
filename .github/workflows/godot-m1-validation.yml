@@ -1,0 +1,107 @@
+name: Godot M1 Runtime Validation
+on:
+  push:
+    branches: [main, "fix/**", "feature/**"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  godot-runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Godot 4.7.2 official Linux binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 --retry-delay 3 \
+            "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip" \
+            --output "$RUNNER_TEMP/godot.zip"
+          unzip -q "$RUNNER_TEMP/godot.zip" -d "$RUNNER_TEMP"
+          chmod +x "$RUNNER_TEMP/Godot_v4.7.2-stable_linux.x86_64"
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/Godot_v4.7.2-stable_linux.x86_64" --version
+
+      - name: Install Korean glyph font for UI rendering validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y fonts-noto-cjk
+          fc-cache -f
+          fc-match "Noto Sans CJK KR"
+
+      - name: Import resources and parse scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p qa_artifacts
+          Godot_v4.7.2-stable_linux.x86_64 --headless --path . --import 2>&1 | tee qa_artifacts/import.log
+          if grep -E 'SCRIPT ERROR|Parse Error|ERROR:' qa_artifacts/import.log; then
+            echo "Godot import/parse emitted errors."
+            exit 1
+          fi
+
+      - name: Test deterministic gameplay calculations
+        shell: bash
+        run: |
+          set -euo pipefail
+          Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script res://tests/smoke_test.gd 2>&1 | tee qa_artifacts/smoke.log
+          grep -Fq "SMOKE PASS:" qa_artifacts/smoke.log
+          if grep -E 'SCRIPT ERROR|Parse Error|ERROR:' qa_artifacts/smoke.log; then exit 1; fi
+
+      - name: Test UI signals and development save round-trip
+        shell: bash
+        run: |
+          set -euo pipefail
+          Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script res://tests/ui_integration_test.gd 2>&1 | tee qa_artifacts/ui_integration.log
+          grep -Fq "UI INTEGRATION PASS:" qa_artifacts/ui_integration.log
+          if grep -E 'SCRIPT ERROR|Parse Error|ERROR:' qa_artifacts/ui_integration.log; then exit 1; fi
+
+      - name: Launch main scene for three frames
+        shell: bash
+        run: |
+          set -euo pipefail
+          Godot_v4.7.2-stable_linux.x86_64 --headless --path . --quit-after 3 2>&1 | tee qa_artifacts/launch.log
+          if grep -E 'SCRIPT ERROR|Parse Error|ERROR:' qa_artifacts/launch.log; then exit 1; fi
+
+      - name: Capture real rendered UI frames at two portrait resolutions
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y xvfb
+          fi
+          mkdir -p qa_artifacts/visual
+          for resolution in 360x800 360x900; do
+            height="${resolution#*x}"
+            sed -i -E "s@^window/size/viewport_height=[0-9]+@window/size/viewport_height=${height}@" project.godot
+            LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a -s "-screen 0 1280x1024x24" \
+              Godot_v4.7.2-stable_linux.x86_64 --path . \
+              --rendering-method gl_compatibility \
+              --write-movie "qa_artifacts/visual/main_${resolution}.png" \
+              --fixed-fps 30 --quit-after 3 2>&1 | tee "qa_artifacts/visual/render_${resolution}.log"
+            image="qa_artifacts/visual/main_${resolution}00000001.png"
+            test -f "$image"
+            python3 -c 'import sys,struct; expected=tuple(map(int,sys.argv[1].split("x"))); raw=open(sys.argv[2],"rb").read(24); actual=struct.unpack(">II",raw[16:24]); print("PNG viewport:",actual,"expected:",expected); assert actual==expected' "$resolution" "$image"
+            if grep -E 'SCRIPT ERROR|Parse Error|ERROR:' "qa_artifacts/visual/render_${resolution}.log"; then
+              exit 1
+            fi
+          done
+          git restore project.godot
+
+      - name: Upload validation logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: godot-m1-runtime-logs
+          path: qa_artifacts/
+          if-no-files-found: ignore
+          retention-days: 14

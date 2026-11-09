@@ -1,0 +1,79 @@
+# M1 Godot 실제 실행 QA — 자동 검증 추가
+
+- 작성일: 2026-11-09
+- 대상: Godot 4.7.2 stable / Linux x86_64 GitHub Actions
+- 관련 이슈: #2
+- 해당 문서는 **테스트 환경 구성** 기록이며, 실제 UI의 그래픽 품질 통과를 의미하지 않는다.
+
+## 새 테스트
+
+1. 공식 Godot 4.7.2 바이너리 다운로드 및 버전 기록
+2. 헤드리스 리소스 임포트와 GDScript 파싱
+3. 기본 데이터·피해 수식·시드 재현 스모크 테스트
+4. M1 UI 버튼 시그널 → 1턴 전진/초기화 → 개발용 저장 → 다시 열기 상태 검증
+5. 메인 씬 3프레임 로딩 검사
+6. GitHub Actions의 로그 아티팩트 저장
+
+## M1 단계 검수 항목
+
+| 항목 | 판정 방법 | 상태 |
+|---|---|---|
+| 데이터 참조 | 기존 Static Data Validation | 성공 기록 있음 |
+| Godot 임포트/파싱 | M1 Runtime Validation Workflow | CI 결과 대조 필요 |
+| GDScript 스모크 | smoke_test.gd | CI 결과 대조 필요 |
+| UI 시그널/저장 | ui_integration_test.gd | CI 결과 대조 필요 |
+| 메인 씬 시작 | CLI --quit-after 3 | CI 결과 대조 필요 |
+| 360×800 및 20:9 시각 QA | 실기기/가상 디스플레이 캡처 후 실제 눈으로 확인 | 미검증 |
+| Android APK 실행 | 기기에서 테스트 빌드 실행 | 미검증 |
+| M1 최종 승인 | 모든 Gate 만족 | **보류** |
+
+## 실제 플레이 테스트 요구사항
+
+- 360×800 / 20:9 비율의 화면 캡처에서 콘텐츠 잘림, 버튼 겹침, 기본 문자 렌더링 검사
+- 1턴/초기화/저장 버튼을 직접 클릭하여 이벤트의 시각 피드백 확인
+- 저장 후 앱 완전 종료·재실행, 턴 정보 유지 확인
+- 대상 Android 기기에서 정상 표시/입력/프레임 검수
+
+## 정책
+
+헤드리스 테스트는 기능 검증이며 실제 렌더링 검증이 아니다. 관련 시각 QA와 Android 검증 전 M1 완료나 M2 착수 승인으로 표기하지 않는다.
+
+참고: https://docs.godotengine.org/en/4.7/tutorials/editor/command_line_tutorial.html
+
+## 2026-11-09 실제 렌더 QA 발견 사항
+
+- PR #3 최초 Xvfb 렌더 캡처는 성공했으나, 두 해상도 모두 540×1200으로 출력됨. 원인: 프로젝트의 고정 데스크톱 창 override. 데스크톱 고정 override 제거 및 PNG 해상도 어설션 추가.
+- 한글이 네모 글리프로 출력됨. 테스트 러너에 Noto Sans CJK 폰트가 없는 상태에서 기본 글꼴이 한국어를 지원하지 않아 발생. Godot SystemFont 우선 후보를 명시하고 CI에서 공개 한국어 글꼴 패키지를 설치한 후 `has_char(한)` 검사 추가.
+- SystemFont는 Android 벤더별로 동작이 불안정할 수 있어 최종 Android 배포 전 프로젝트에 OFL 등 재배포 가능한 폰트를 별도 포함하도록 **추가 출하 게이트** 지정.
+- 두 문제 수정 후 실제 PNG를 다시 눈으로 확인해야만 시각 QA를 통과시킬 수 있다.
+
+
+## 2026-11-09 엔진 및 렌더 검증 실행 결과
+
+**검증 커밋:** `4d4ab812d98ddcee68838a3aa6895b0e2235f138`  
+**GitHub Actions:** https://github.com/nalkarowndal/ppp/actions/runs/42575124987
+
+| 검수 | 결과 | 확인 근거 |
+|---|---|---|
+| Godot 4.7.2 공식 실행 | PASS | Godot Engine v4.7.2.stable.official |
+| 임포트 및 스크립트 파싱 | PASS | import 로그, 자동 Job 성공 |
+| 전투 계산 / 시드 재현 | PASS | SMOKE PASS |
+| UI 버튼 연결 / 저장·복원 | PASS | UI INTEGRATION PASS |
+| 헤드리스 메인 씬 시작 | PASS | `--quit-after 3` |
+| 화면 렌더 360×800 | PASS (가상 디스플레이) | 출력 PNG 360×800 확인 |
+| 화면 렌더 360×900 | PASS (가상 디스플레이) | 출력 PNG 360×900 확인 |
+| 한글 글리프 | PASS (CI Linux) | Noto Sans CJK KR 설치 후 `Font.has_char` 검사 및 PNG 수동 확인 |
+| 시각적 잘림·카드 겹침 | PASS (M1 임시 화면 한정) | 두 PNG 직접 검토, 목록은 ScrollContainer 내 스크롤 |
+| 물리 Android 기기·터치 | **NOT TESTED** | 기기 빌드/실행 필요 |
+| 플랫폼 독립 폰트 번들 | **NOT IMPLEMENTED** | SystemFont는 Android 벤더별로 차이 있을 수 있음 |
+| 앱 완전 종료·재실행 수동 테스트 | **NOT TESTED** | Headless 스크립트의 저장 재생성만 검증됨 |
+
+### 남은 M1 검수
+
+- [ ] Android 디버그 빌드 생성 및 실기기 설치·실행
+- [ ] 실제 터치로 버튼 1턴/초기화/저장 동작 확인
+- [ ] 앱 종료 후 재실행 및 저장 UI 정상 복구
+- [ ] Android에서 한글 폰트 호환성 확인; 필요 시 프로젝트 번들형 오픈 라이선스 폰트 도입
+- [ ] 모바일 안전 영역·실제 기기 DPI·화면 회전 동작 검증
+
+M1은 **최종 승인 보류**. PR을 병합하더라도 이슈 #2는 열어 두고 미완료 항목을 추적한다.
