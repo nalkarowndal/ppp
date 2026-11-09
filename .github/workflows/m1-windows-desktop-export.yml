@@ -1,0 +1,148 @@
+name: M1 Windows Desktop Executable
+on:
+  push:
+    branches: [main, "feature/**", "fix/**"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  export-windows:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Install official Godot 4.7.2 Linux editor
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 5 --retry-delay 4 --retry-all-errors \
+            "https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip" \
+            --output "$RUNNER_TEMP/godot.zip"
+          unzip -q "$RUNNER_TEMP/godot.zip" -d "$RUNNER_TEMP"
+          chmod +x "$RUNNER_TEMP/Godot_v4.7.2-stable_linux.x86_64"
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/Godot_v4.7.2-stable_linux.x86_64" --version
+
+      - name: Extract official Windows x64 debug export templates
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 5 --retry-delay 4 --retry-all-errors \
+            "https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz" \
+            --output "$RUNNER_TEMP/godot_templates.tpz"
+          template_dir="$HOME/.local/share/godot/export_templates/4.7.2.stable"
+          mkdir -p "$template_dir"
+          python3 - "$RUNNER_TEMP/godot_templates.tpz" "$template_dir" <<'PY'
+          import pathlib, sys, zipfile, shutil
+          archive = pathlib.Path(sys.argv[1])
+          destination = pathlib.Path(sys.argv[2])
+          expected = ("windows_debug_x86_64.exe", "windows_debug_x86_64_console.exe")
+          with zipfile.ZipFile(archive) as z:
+              names = z.namelist()
+              for file in expected:
+                  candidates = [n for n in names if pathlib.PurePosixPath(n).name == file]
+                  if len(candidates) != 1:
+                      raise RuntimeError("Required Windows Godot template missing: " + file)
+                  with z.open(candidates[0]) as source, (destination / file).open("wb") as target:
+                      shutil.copyfileobj(source, target)
+          (destination / "version.txt").write_text("4.7.2.stable", encoding="utf-8")
+          PY
+          ls -lh "$template_dir"
+
+      - name: Export Windows EXE with embedded game data
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p builds qa_artifacts
+          Godot_v4.7.2-stable_linux.x86_64 --headless --path . --import 2>&1 | tee qa_artifacts/desktop_import.log
+          if grep -E 'SCRIPT ERROR|Parse Error|ERROR:' qa_artifacts/desktop_import.log; then exit 1; fi
+          Godot_v4.7.2-stable_linux.x86_64 --headless --path . \
+            --export-debug "Windows Desktop" "builds/AstralChronicle-M1-Windows-x64.exe" \
+            2>&1 | tee qa_artifacts/desktop_export.log
+          if grep -E 'SCRIPT ERROR|Parse Error|ERROR:' qa_artifacts/desktop_export.log; then exit 1; fi
+          python3 - <<'PY'
+          from pathlib import Path
+          exe = Path("builds/AstralChronicle-M1-Windows-x64.exe")
+          assert exe.is_file() and exe.stat().st_size > 1000000, "Windows EXE missing or too small"
+          with exe.open("rb") as f:
+              assert f.read(2) == b"MZ", "Windows binary does not have PE MZ magic"
+          assert not list(Path("builds").glob("*.pck")), "Expected embedded PCK, found external PCK"
+          print("WINDOWS DESKTOP EXPORT PASS: EXE exists, PE header valid, no external PCK")
+          PY
+          sha256sum builds/AstralChronicle-M1-Windows-x64.exe > qa_artifacts/windows-exe-sha256.txt
+
+      - name: Add Windows desktop readme
+        shell: bash
+        run: |
+          cat > builds/README-Windows.txt <<'EOF'
+          ASTRAL CHRONICLE / M1 Windows x64 prototype
+          ===========================================
+          Run AstralChronicle-M1-Windows-x64.exe on Windows 10/11 x64.
+          No Godot installation or additional .pck file is required.
+          This is an UNSIGNED DEVELOPMENT BUILD, not the complete RPG.
+          The UI and turn-based debug sandbox are placeholders.
+          Windows SmartScreen/antivirus may warn about unsigned applications.
+          Source: https://github.com/nalkarowndal/ppp
+          EOF
+
+      - name: Upload desktop executable archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: astral-chronicle-m1-windows-x64
+          path: |
+            builds/AstralChronicle-M1-Windows-x64.exe
+            builds/README-Windows.txt
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Upload desktop export logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m1-windows-desktop-export-logs
+          path: qa_artifacts/
+          retention-days: 14
+          if-no-files-found: ignore
+
+  verify-windows:
+    needs: export-windows
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download the exact exported EXE from this run
+        uses: actions/download-artifact@v4
+        with:
+          name: astral-chronicle-m1-windows-x64
+          path: desktop_build
+
+      - name: Run exported executable on native Windows
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $exe = (Resolve-Path "desktop_build/AstralChronicle-M1-Windows-x64.exe").Path
+          if ((Get-Item -LiteralPath $exe).Length -lt 1000000) { throw "Executable unexpectedly small" }
+          Push-Location "desktop_build"
+          try {
+            & $exe --headless --quit-after 3 2>&1 | Tee-Object -FilePath "native-exe-startup.log"
+            if ($LASTEXITCODE -ne 0) { throw "Standalone EXE startup exited with $LASTEXITCODE" }
+            if (Select-String -Path "native-exe-startup.log" -Pattern "SCRIPT ERROR","Parse Error","ERROR:") {
+              throw "Standalone EXE startup emitted errors"
+            }
+          } finally {
+            Pop-Location
+          }
+          Write-Host "WINDOWS EXE NATIVE SMOKE PASS: standalone executable started from downloaded artifact"
+
+      - name: Upload native EXE validation log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m1-windows-exported-exe-native-test
+          path: desktop_build/native-exe-startup.log
+          retention-days: 14
+          if-no-files-found: ignore
