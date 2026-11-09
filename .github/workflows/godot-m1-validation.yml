@@ -62,6 +62,27 @@ jobs:
           Godot_v4.7.2-stable_linux.x86_64 --headless --path . --quit-after 3 2>&1 | tee qa_artifacts/launch.log
           if grep -E 'SCRIPT ERROR|Parse Error|ERROR:' qa_artifacts/launch.log; then exit 1; fi
 
+      - name: Capture real rendered UI frames at two portrait resolutions
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y xvfb
+          fi
+          mkdir -p qa_artifacts/visual
+          for resolution in 360x800 360x900; do
+            LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a -s "-screen 0 1280x1024x24" \
+              Godot_v4.7.2-stable_linux.x86_64 --path . \
+              --rendering-method gl_compatibility --resolution "$resolution" \
+              --write-movie "qa_artifacts/visual/main_${resolution}.png" \
+              --fixed-fps 30 --quit-after 3 2>&1 | tee "qa_artifacts/visual/render_${resolution}.log"
+            test -f "qa_artifacts/visual/main_${resolution}00000001.png"
+            if grep -E 'SCRIPT ERROR|Parse Error|ERROR:' "qa_artifacts/visual/render_${resolution}.log"; then
+              exit 1
+            fi
+          done
+
       - name: Upload validation logs
         if: always()
         uses: actions/upload-artifact@v4
