@@ -46,3 +46,8 @@ M1은 위 플랫폼 실기기·GUI 검수가 남아 있는 동안 최종 승인 
 - **Android 최초 APK 실패:** SDK·JDK·디버그 서명 및 템플릿은 준비되었으나 `ETC2/ASTC texture compression is required for Android export` 오류가 발생.
 - 조치: `project.godot` [rendering]의 `textures/vram_compression/import_etc2_astc=true` 추가. 이는 Android 전용 텍스처 포맷 임포트를 활성화하는 설정이며 픽셀 스프라이트에 무조건 VRAM 압축을 강제하는 것이 아님.
 - 최신 CI에서 APK 생성과 서명 검증을 재확인한 뒤 승인 판정 예정.
+
+## Android 2차 CI 결과 및 대응
+
+- ETC2/ASTC 설정 추가 후 APK 내보내기가 압축·서명·검증 단계까지 완료되었으나, `No project icon specified`가 Godot의 `ERROR:`로 출력되어 CI 실패.
+- 자체 제작 개발용 `assets/icon.svg`를 추가하고 `application/config/icon`에 지정한 다음 재검증한다.
