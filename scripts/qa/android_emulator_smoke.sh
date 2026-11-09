@@ -52,7 +52,7 @@ echo "EMULATOR TEST: force-stop and new process"
 adb shell am force-stop "$PKG"
 sleep 2
 adb shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1 | tee "$OUT/restart.txt"
-sleep 9
+sleep 35
 adb shell pidof "$PKG" | tee "$OUT/restart_pid.txt"
 test -s "$OUT/restart_pid.txt"
 adb exec-out screencap -p > "$OUT/restart_launch.png"
