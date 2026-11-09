@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "status": "prototype_initial_values",
+  "party_size": 5,
+  "frontline": 2,
+  "backline": 3,
+  "maximum_level": 100,
+  "maximum_idle_hours": 8,
+  "offline_efficiency": 0.8,
+  "ultimate_energy_max": 100,
+  "damage_variance": [
+    0.95,
+    1.05
+  ],
+  "stage_enemy_hp_base": 450,
+  "stage_enemy_hp_multiplier": 1.07,
+  "stage_enemy_atk_base": 65,
+  "stage_enemy_atk_multiplier": 1.05
+}

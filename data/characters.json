@@ -1,0 +1,154 @@
+[
+  {
+    "id": "CHR_ARIA",
+    "name": "아리아",
+    "rarity": "SR",
+    "role": "WARRIOR",
+    "element": "FIRE",
+    "base_stats": {
+      "hp": 950,
+      "atk": 135,
+      "def": 58,
+      "spd": 105,
+      "crit": 0.08,
+      "crit_damage": 1.5
+    },
+    "skill_ids": [
+      "SKL_ARIA_ACTIVE",
+      "SKL_ARIA_ULTIMATE"
+    ]
+  },
+  {
+    "id": "CHR_SERENA",
+    "name": "세레나",
+    "rarity": "SSR",
+    "role": "MAGE",
+    "element": "ICE",
+    "base_stats": {
+      "hp": 720,
+      "atk": 166,
+      "def": 36,
+      "spd": 99,
+      "crit": 0.07,
+      "crit_damage": 1.5
+    },
+    "skill_ids": [
+      "SKL_SERENA_ACTIVE",
+      "SKL_SERENA_ULTIMATE"
+    ]
+  },
+  {
+    "id": "CHR_LEON",
+    "name": "레온",
+    "rarity": "SR",
+    "role": "TANK",
+    "element": "LIGHT",
+    "base_stats": {
+      "hp": 1600,
+      "atk": 75,
+      "def": 110,
+      "spd": 85,
+      "crit": 0.05,
+      "crit_damage": 1.5
+    },
+    "skill_ids": [
+      "SKL_LEON_ACTIVE",
+      "SKL_LEON_ULTIMATE"
+    ]
+  },
+  {
+    "id": "CHR_LUNA",
+    "name": "루나",
+    "rarity": "SR",
+    "role": "SUPPORT",
+    "element": "NATURE",
+    "base_stats": {
+      "hp": 850,
+      "atk": 92,
+      "def": 55,
+      "spd": 96,
+      "crit": 0.05,
+      "crit_damage": 1.5
+    },
+    "skill_ids": [
+      "SKL_LUNA_ACTIVE",
+      "SKL_LUNA_ULTIMATE"
+    ]
+  },
+  {
+    "id": "CHR_KYLE",
+    "name": "카일",
+    "rarity": "SSR",
+    "role": "ASSASSIN",
+    "element": "DARK",
+    "base_stats": {
+      "hp": 780,
+      "atk": 178,
+      "def": 39,
+      "spd": 122,
+      "crit": 0.15,
+      "crit_damage": 1.5
+    },
+    "skill_ids": [
+      "SKL_KYLE_ACTIVE",
+      "SKL_KYLE_ULTIMATE"
+    ]
+  },
+  {
+    "id": "CHR_RIA",
+    "name": "리아",
+    "rarity": "SR",
+    "role": "ARCHER",
+    "element": "LIGHTNING",
+    "base_stats": {
+      "hp": 790,
+      "atk": 140,
+      "def": 44,
+      "spd": 115,
+      "crit": 0.12,
+      "crit_damage": 1.5
+    },
+    "skill_ids": [
+      "SKL_RIA_ACTIVE",
+      "SKL_RIA_ULTIMATE"
+    ]
+  },
+  {
+    "id": "CHR_ELIN",
+    "name": "엘린",
+    "rarity": "R",
+    "role": "MAGE",
+    "element": "NATURE",
+    "base_stats": {
+      "hp": 750,
+      "atk": 122,
+      "def": 38,
+      "spd": 103,
+      "crit": 0.06,
+      "crit_damage": 1.5
+    },
+    "skill_ids": [
+      "SKL_ELIN_ACTIVE",
+      "SKL_ELIN_ULTIMATE"
+    ]
+  },
+  {
+    "id": "CHR_BELL",
+    "name": "벨",
+    "rarity": "R",
+    "role": "TANK",
+    "element": "FIRE",
+    "base_stats": {
+      "hp": 1320,
+      "atk": 87,
+      "def": 93,
+      "spd": 88,
+      "crit": 0.05,
+      "crit_damage": 1.5
+    },
+    "skill_ids": [
+      "SKL_BELL_ACTIVE",
+      "SKL_BELL_ULTIMATE"
+    ]
+  }
+]
