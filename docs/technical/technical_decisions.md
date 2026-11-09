@@ -2,7 +2,7 @@
 
 ## ADR-001 엔진/언어
 
-Godot 4.7.2 안정 릴리스 기준으로 GDScript를 사용한다. 엔진 버전이 다를 경우 씬·스크립트 및 내보내기를 재검증한다. 현재 작업 환경에서는 Godot 바이너리 실행 검증을 완료하지 못했으므로 **실행 성공으로 표기하지 않는다**.
+Godot 4.7.2 안정 릴리스 기준으로 GDScript를 사용한다. 엔진 버전이 다를 경우 씬·스크립트 및 내보내기를 재검증한다. GitHub Actions Linux에서 공식 Godot 4.7.2 바이너리로 Import·Smoke·UI 동작·가상 디스플레이 렌더링 검증을 통과했다. Android/Windows 실제 기기 검수와 플랫폼 독립 한글 폰트 번들은 아직 미완료다.
 
 ## ADR-002 배포 우선순위
 
@@ -43,3 +43,10 @@ godot --path .
 - [Godot 4.7 multiple resolutions](https://docs.godotengine.org/en/4.7/tutorials/rendering/multiple_resolutions.html)
 - [Godot 4.7 FileAccess](https://docs.godotengine.org/en/4.7/classes/class_fileaccess.html)
 - [Godot 4.7 command line](https://docs.godotengine.org/en/4.7/tutorials/editor/command_line_tutorial.html)
+
+## ADR-008 한국어 UI 폰트 및 화면비 (M1 QA)
+
+- 기본 텍스트는 `SystemFont`에서 Noto Sans CJK KR → 맑은 고딕 → 나눔고딕 → sans-serif 순서로 찾도록 구성했다.
+- GitHub Actions Linux에는 `fonts-noto-cjk`를 설치해 한글 글리프와 출력 PNG를 확인한다.
+- Android에서는 시스템 글꼴 탐색이 기기마다 상이할 수 있으므로 정식 게임 배포 전 자유 재배포 가능한 한글 폰트를 게임에 포함하여 실기기 검증한다.
+- 테스트 화면은 360×800과 360×900; CI에서 프로젝트 뷰포트 높이를 일시적으로 변경하며 PNG 픽셀 크기를 자동 검증한다.
