@@ -1,0 +1,162 @@
+[
+  {
+    "id": "SKL_ARIA_ACTIVE",
+    "name": "화염 참격",
+    "category": "ACTIVE",
+    "target": "SINGLE_ENEMY",
+    "coefficient": 1.65,
+    "cooldown_sec": 8,
+    "effect_type": "BURN",
+    "status": "spec_only_not_implemented"
+  },
+  {
+    "id": "SKL_SERENA_ACTIVE",
+    "name": "서리 파동",
+    "category": "ACTIVE",
+    "target": "UP_TO_3_ENEMIES",
+    "coefficient": 1.2,
+    "cooldown_sec": 10,
+    "effect_type": "SLOW",
+    "status": "spec_only_not_implemented"
+  },
+  {
+    "id": "SKL_LEON_ACTIVE",
+    "name": "수호의 방벽",
+    "category": "ACTIVE",
+    "target": "ALLY_LOW_HP",
+    "coefficient": 0.15,
+    "cooldown_sec": 10,
+    "effect_type": "SHIELD",
+    "status": "spec_only_not_implemented"
+  },
+  {
+    "id": "SKL_LUNA_ACTIVE",
+    "name": "자연의 손길",
+    "category": "ACTIVE",
+    "target": "ALLY_LOW_HP",
+    "coefficient": 2.2,
+    "cooldown_sec": 8,
+    "effect_type": "HEAL",
+    "status": "spec_only_not_implemented"
+  },
+  {
+    "id": "SKL_KYLE_ACTIVE",
+    "name": "그림자 급습",
+    "category": "ACTIVE",
+    "target": "ENEMY_BACK",
+    "coefficient": 1.9,
+    "cooldown_sec": 7.5,
+    "effect_type": "DAMAGE",
+    "status": "spec_only_not_implemented"
+  },
+  {
+    "id": "SKL_RIA_ACTIVE",
+    "name": "연속 사격",
+    "category": "ACTIVE",
+    "target": "SINGLE_ENEMY",
+    "coefficient": 0.65,
+    "cooldown_sec": 8,
+    "effect_type": "MULTIHIT_3",
+    "status": "spec_only_not_implemented"
+  },
+  {
+    "id": "SKL_ELIN_ACTIVE",
+    "name": "자연의 독무",
+    "category": "ACTIVE",
+    "target": "UP_TO_3_ENEMIES",
+    "coefficient": 1.2,
+    "cooldown_sec": 10,
+    "effect_type": "POISON",
+    "status": "spec_only_not_implemented"
+  },
+  {
+    "id": "SKL_BELL_ACTIVE",
+    "name": "강철의 도발",
+    "category": "ACTIVE",
+    "target": "SELF",
+    "coefficient": 0.1,
+    "cooldown_sec": 12,
+    "effect_type": "TAUNT",
+    "status": "spec_only_not_implemented"
+  },
+  {
+    "id": "SKL_ARIA_ULTIMATE",
+    "name": "홍련 폭풍",
+    "category": "ULTIMATE",
+    "target": "UP_TO_3_ENEMIES",
+    "coefficient": 2.6,
+    "cooldown_sec": 0,
+    "effect_type": "DAMAGE",
+    "status": "spec_only_not_implemented"
+  },
+  {
+    "id": "SKL_SERENA_ULTIMATE",
+    "name": "영원의 겨울",
+    "category": "ULTIMATE",
+    "target": "ALL_ENEMIES",
+    "coefficient": 2.4,
+    "cooldown_sec": 0,
+    "effect_type": "FREEZE_30",
+    "status": "spec_only_not_implemented"
+  },
+  {
+    "id": "SKL_LEON_ULTIMATE",
+    "name": "불굴의 맹세",
+    "category": "ULTIMATE",
+    "target": "SELF",
+    "coefficient": 0.3,
+    "cooldown_sec": 0,
+    "effect_type": "TAUNT_SHIELD",
+    "status": "spec_only_not_implemented"
+  },
+  {
+    "id": "SKL_LUNA_ULTIMATE",
+    "name": "생명의 노래",
+    "category": "ULTIMATE",
+    "target": "ALL_ALLIES",
+    "coefficient": 2,
+    "cooldown_sec": 0,
+    "effect_type": "HEAL_REGEN",
+    "status": "spec_only_not_implemented"
+  },
+  {
+    "id": "SKL_KYLE_ULTIMATE",
+    "name": "월식의 일격",
+    "category": "ULTIMATE",
+    "target": "SINGLE_ENEMY",
+    "coefficient": 4,
+    "cooldown_sec": 0,
+    "effect_type": "DAMAGE",
+    "status": "spec_only_not_implemented"
+  },
+  {
+    "id": "SKL_RIA_ULTIMATE",
+    "name": "낙뢰 연쇄",
+    "category": "ULTIMATE",
+    "target": "UP_TO_3_ENEMIES",
+    "coefficient": 1.5,
+    "cooldown_sec": 0,
+    "effect_type": "CHAIN",
+    "status": "spec_only_not_implemented"
+  },
+  {
+    "id": "SKL_ELIN_ULTIMATE",
+    "name": "독림의 각성",
+    "category": "ULTIMATE",
+    "target": "ALL_ENEMIES",
+    "coefficient": 1.8,
+    "cooldown_sec": 0,
+    "effect_type": "DEF_DOWN",
+    "status": "spec_only_not_implemented"
+  },
+  {
+    "id": "SKL_BELL_ULTIMATE",
+    "name": "불멸의 장벽",
+    "category": "ULTIMATE",
+    "target": "ALL_ALLIES",
+    "coefficient": 0.1,
+    "cooldown_sec": 0,
+    "effect_type": "SHIELD",
+    "status": "spec_only_not_implemented"
+  }
+]

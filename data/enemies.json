@@ -1,0 +1,26 @@
+[
+  {
+    "id": "ENM_FOREST_SLIME",
+    "name": "숲의 슬라임",
+    "hp": 450,
+    "atk": 65,
+    "def": 30,
+    "role": "MELEE"
+  },
+  {
+    "id": "ENM_FOREST_ARCHER",
+    "name": "숲의 사수",
+    "hp": 360,
+    "atk": 78,
+    "def": 22,
+    "role": "RANGED"
+  },
+  {
+    "id": "ENM_FOREST_GUARD",
+    "name": "숲의 수호병",
+    "hp": 675,
+    "atk": 52,
+    "def": 45,
+    "role": "DEFENDER"
+  }
+]
