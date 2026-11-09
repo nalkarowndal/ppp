@@ -71,9 +71,19 @@ for name in sys.argv[1:]:
     print("EMULATOR SCREENSHOT PASS:", name, w, h)
 PY
 
+adb shell uiautomator dump /sdcard/astral_ui_dump_after_restart.xml >/dev/null 2>&1 || true
+adb shell cat /sdcard/astral_ui_dump_after_restart.xml > "$OUT/restart_ui_hierarchy.xml" 2>/dev/null || true
+if grep -Eiq "isn't responding|not responding|has stopped|Viewing full screen" "$OUT/restart_ui_hierarchy.xml"; then
+  echo "ANDROID EMULATOR FAIL: system crash/ANR or immersive-mode overlay obscures game"
+  exit 1
+fi
 adb logcat -d -v time > "$OUT/full_logcat.txt" || true
 grep -Ei 'Godot|M1_UI_READY|AndroidRuntime|FATAL EXCEPTION|Fatal signal|SIGSEGV|SIGABRT' "$OUT/full_logcat.txt" > "$OUT/godot_diagnostics.txt" || true
 adb logcat -d -v time -s AndroidRuntime:E libc:F Godot:E > "$OUT/critical_logcat.txt" || true
+if grep -E "CanvasShaderGLES3: Program linking failed|Fragment shader active uniforms exceed GL_MAX_FRAGMENT_UNIFORM_VECTORS" "$OUT/full_logcat.txt"; then
+  echo "ANDROID EMULATOR FAIL: Godot GLES3 shader link failed on current graphics driver"
+  exit 1
+fi
 if ! grep -Fq "M1_UI_READY" "$OUT/full_logcat.txt"; then
   echo "ANDROID EMULATOR FAIL: Godot main UI did not log readiness"
   exit 1

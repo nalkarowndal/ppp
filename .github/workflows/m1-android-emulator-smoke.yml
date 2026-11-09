@@ -110,10 +110,10 @@ jobs:
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
-          target: google_apis
+          target: default
           arch: x86_64
-          profile: pixel_6
-          emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect
+          profile: pixel_2
+          emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu host
           script: bash scripts/qa/android_emulator_smoke.sh
 
       - name: Upload emulator screenshots and runtime diagnostics

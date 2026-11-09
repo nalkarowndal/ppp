@@ -41,3 +41,11 @@
 최초 에뮬레이터 APK 실행 자체는 성공했으나, 첫 번째 PNG 캡처와 재실행 PNG에서 **Android OS 전체화면 안내(“Viewing full screen” / “Got it”)가 게임 UI를 가리고 있었음**을 직접 확인했다. 처음 자동 스모크 테스트는 PNG 구조만 확인해 이 문제를 발견하지 못했다.
 
 조치: ADB를 통해 해당 시스템 안내를 닫은 후 다시 캡처한다. UIAutomator에서 안내 문구가 남아 있다면 오류로 처리한다. 이 변경을 검증하는 신규 CI 결과와 PNG 수동 검사 전에는 **게임 화면 시각 QA PASS로 처리하지 않는다.**
+
+## 실행 진단 2026-11-09 — Godot/Android GLSL 호환성
+
+Android 35 Google APIs + Pixel 6 + SwiftShader 에뮬레이터에서는 메인 씬 `M1_UI_READY` 로그가 최초 실행과 재시작 모두에 기록되었음에도 실제 캡처가 `Pixel Launcher isn't responding` 경고로 가려졌다. `Godot GLES3 CanvasShaderGLES3` 로깅에서 `Fragment shader active uniforms exceed GL_MAX_FRAGMENT_UNIFORM_VECTORS (261)`이 확인되었다. **이는 화면 QA 불합격이며 첫 자동 스모크 성공과 구분한다.**
+
+완화 실험: AOSP 기본 시스템 이미지(기존 Pixel Launcher 없음) + 에뮬레이터 `-gpu host` 방식으로 변경한다. 그래픽 셰이더 오류 또는 시스템 ANR 문자열을 실제 QA 실패로 처리한다. CI 결과를 재확인하기 전에는 Android 그래픽 성공을 주장하지 않는다.
+
+참고 Godot 이슈: https://github.com/godotengine/godot/issues/109550
