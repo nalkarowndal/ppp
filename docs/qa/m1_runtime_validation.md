@@ -39,3 +39,10 @@
 헤드리스 테스트는 기능 검증이며 실제 렌더링 검증이 아니다. 관련 시각 QA와 Android 검증 전 M1 완료나 M2 착수 승인으로 표기하지 않는다.
 
 참고: https://docs.godotengine.org/en/4.7/tutorials/editor/command_line_tutorial.html
+
+## 2026-11-09 실제 렌더 QA 발견 사항
+
+- PR #3 최초 Xvfb 렌더 캡처는 성공했으나, 두 해상도 모두 540×1200으로 출력됨. 원인: 프로젝트의 고정 데스크톱 창 override. 데스크톱 고정 override 제거 및 PNG 해상도 어설션 추가.
+- 한글이 네모 글리프로 출력됨. 테스트 러너에 Noto Sans CJK 폰트가 없는 상태에서 기본 글꼴이 한국어를 지원하지 않아 발생. Godot SystemFont 우선 후보를 명시하고 CI에서 공개 한국어 글꼴 패키지를 설치한 후 `has_char(한)` 검사 추가.
+- SystemFont는 Android 벤더별로 동작이 불안정할 수 있어 최종 Android 배포 전 프로젝트에 OFL 등 재배포 가능한 폰트를 별도 포함하도록 **추가 출하 게이트** 지정.
+- 두 문제 수정 후 실제 PNG를 다시 눈으로 확인해야만 시각 QA를 통과시킬 수 있다.

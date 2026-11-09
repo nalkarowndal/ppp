@@ -11,6 +11,10 @@ func _run_tests() -> void:
 	root.add_child(main)
 	await process_frame
 
+	var ui_font: Font = main.theme.default_font
+	if ui_font == null or not ui_font.has_char(0xD55C):
+		_fail("missing Korean Hangul glyph (한) in selected UI font")
+		return
 	var roster: Array = main.get("_roster")
 	if roster.size() != 8:
 		_fail("expected 8 roster characters")

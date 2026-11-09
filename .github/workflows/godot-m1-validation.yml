@@ -28,6 +28,15 @@ jobs:
           echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
           "$RUNNER_TEMP/Godot_v4.7.2-stable_linux.x86_64" --version
 
+      - name: Install Korean glyph font for UI rendering validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y fonts-noto-cjk
+          fc-cache -f
+          fc-match "Noto Sans CJK KR"
+
       - name: Import resources and parse scripts
         shell: bash
         run: |
@@ -77,7 +86,9 @@ jobs:
               --rendering-method gl_compatibility --resolution "$resolution" \
               --write-movie "qa_artifacts/visual/main_${resolution}.png" \
               --fixed-fps 30 --quit-after 3 2>&1 | tee "qa_artifacts/visual/render_${resolution}.log"
-            test -f "qa_artifacts/visual/main_${resolution}00000001.png"
+            image="qa_artifacts/visual/main_${resolution}00000001.png"
+            test -f "$image"
+            python3 -c 'import sys,struct; expected=tuple(map(int,sys.argv[1].split("x"))); raw=open(sys.argv[2],"rb").read(24); actual=struct.unpack(">II",raw[16:24]); print("PNG viewport:",actual,"expected:",expected); assert actual==expected' "$resolution" "$image"
             if grep -E 'SCRIPT ERROR|Parse Error|ERROR:' "qa_artifacts/visual/render_${resolution}.log"; then
               exit 1
             fi

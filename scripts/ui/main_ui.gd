@@ -19,6 +19,7 @@ var _party_label: Label
 var _save_label: Label
 
 func _ready() -> void:
+	_setup_fonts()
 	_roster = Repo.load_array("res://data/characters.json")
 	_enemies = Repo.load_array("res://data/enemies.json")
 	if _roster.size() >= 3 and not _enemies.is_empty():
@@ -28,6 +29,14 @@ func _ready() -> void:
 	var previous := Save.load_debug_state()
 	if not previous.is_empty():
 		_save_label.text = "이전 개발용 저장: %d턴" % int(previous.get("sandbox_turn", 0))
+
+func _setup_fonts() -> void:
+	## M1 uses platform system font; portable OFL font asset is a later export gate.
+	var korean_font := SystemFont.new()
+	korean_font.font_names = PackedStringArray(["Noto Sans CJK KR", "Malgun Gothic", "NanumGothic", "sans-serif"])
+	var ui_theme := Theme.new()
+	ui_theme.default_font = korean_font
+	theme = ui_theme
 
 func _build_ui() -> void:
 	var backdrop := ColorRect.new()
