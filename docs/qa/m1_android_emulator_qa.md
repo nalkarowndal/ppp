@@ -56,3 +56,10 @@ Android 35 Google APIs + Pixel 6 + SwiftShader 에뮬레이터에서는 메인 �
 - 호스트 GPU 의존을 제거하기 위해 기존 정상 부팅된 `-gpu swiftshader_indirect`로 복구, 에뮬레이터 부팅 제한 420초와 테스트 스크립트 300초 제한 설정.
 - UI 판정을 강화하기 위해 Pillow 이미지 샘플 검사로 게임 M1 컬러 팔레트 `#111827` 배경, `#222D45` 카드가 두 스크린샷에 실재하는지 검사. PNG 자체가 유효하고 `M1_UI_READY`만 기록됐다고 통과하지 않음.
 - GUI 확인을 위한 Android 시스템 팝업, GLSL 오류, ANR 탐지는 유지. 이 설정의 CI 결과가 나오기 전까지 Android GUI 시각 QA는 실패/미통과 상태.
+
+## 2026-11-10: SwiftShader GLES3 실제 앱 프로세스 종료
+
+- GitHub Actions [run #42727198689](https://github.com/nalkarowndal/ppp/actions/runs/42727198689): Android 35 AOSP x86_64 에뮬레이터는 SwiftShader 간접 GPU 모드에서 **30초 이내 부팅 성공**.
+- APK 설치와 앱 실행 직후 로그에서 Godot `SceneShaderGLES3: Program linking failed: Fragment shader active uniforms exceed GL_MAX_FRAGMENT_UNIFORM_VECTORS (261)`가 반복되었고, 약 4초 만에 GodotActivity가 종료되어 `pidof` 검증 실패. `M1_UI_READY`만 확인하던 기존 테스트보다 구체적인 렌더 실패 원인 확인.
+- 다음 분리 검증은 Android Emulator ANGLE+SwiftShader Vulkan 번역 경로인 `-gpu swangle_indirect`로 실행. 2025년 Android 35 에뮬레이터 활용 사례에서 사용한 옵션이며 실제 결과를 확인하기 전까지 성공 간주 금지.
+- 이 변경은 **CI 에뮬레이터 설정에만 적용**되며 출시용 Android arm64 앱 렌더러와 Windows EXE의 설정은 변경하지 않는다.

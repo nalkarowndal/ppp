@@ -122,7 +122,7 @@ jobs:
           arch: x86_64
           profile: pixel_2
           emulator-boot-timeout: 420
-          emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect
+          emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swangle_indirect
           script: timeout 300s bash scripts/qa/android_emulator_smoke.sh
 
       - name: Upload emulator screenshots and runtime diagnostics
