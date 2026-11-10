@@ -77,3 +77,9 @@ M1은 위 플랫폼 실기기·GUI 검수가 남아 있는 동안 최종 승인 
 - 실제 PE (MZ) 시그니처, 별도 PCK 미생성, EXE 크기, SHA-256 및 실행 파일을 별도 `builds` 경로에서 헤드리스 실행하는지 검증.
 - 통과 시 GitHub Actions `astral-chronicle-m1-windows-x64` 아티팩트 ZIP 생성.
 - **남은 검증:** Windows 사용자 화면의 직접 클릭, 한글 표시, 다중 모니터/해상도, 사용자별 SmartScreen 동작 등은 자동 Headless 빌드만으로 판정할 수 없음.
+
+## 2026-11-10 Windows EXE 본체 입력·저장 QA
+
+- 실제 Windows x64 Debug EXE의 `--headless -- --m1-windows-qa write/read` 두 프로세스에서 Godot Viewport 마우스 입력 STEP→RESET→STEP→SAVE와 턴 1 복원 자동 테스트 성공: [Actions #42763935221](https://github.com/nalkarowndal/ppp/actions/runs/42763935221).
+- Windows 엔진 GDScript 포인터 시험(PR #8)과 별도로 **사용자가 받는 EXE 본체**의 이벤트·저장을 검사한다.
+- 로컬 Windows 잠금 해제된 화면에서 실제 클릭·3종 PNG 검사 미완료: [검수 절차](m1_windows_gui_qa.md). M1 최종 승인 보류.

@@ -46,3 +46,7 @@ Godot 없이 실행할 수 있는 Windows x64 개발용 `.exe`가 GitHub Actions
 - Godot 게임 리소스는 실행 파일에 포함되어 있어 별도 `.pck` 파일이 필요하지 않습니다.
 - **주의:** 개발용 디버그 실행 파일이며 코드 서명되지 않았습니다. Windows SmartScreen 경고가 표시될 수 있습니다. 정식 게임/완성 MVP가 아닙니다.
 - [플랫폼 검증 계획 및 남은 실기기 QA](docs/qa/m1_platform_validation_plan.md)
+
+## Windows EXE 실제 포인터 입력 자동검증
+
+[Windows EXE Actions](https://github.com/nalkarowndal/ppp/actions/workflows/m1-windows-desktop-export.yml)는 **내보낸 EXE 자체**를 두 번 실행해 헤드리스 포인터 STEP→RESET→STEP→SAVE 및 저장 후 새로운 프로세스에서 턴 1 복원을 검사합니다. 실제 PC 화면·마우스 직접 검수는 [Windows GUI QA 지침](docs/qa/m1_windows_gui_qa.md)의 수동 절차를 따릅니다. 헤드리스 PASS는 Windows GUI 최종 PASS가 아닙니다.

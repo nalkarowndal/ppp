@@ -138,11 +138,37 @@ jobs:
           }
           Write-Host "WINDOWS EXE NATIVE SMOKE PASS: standalone executable started from downloaded artifact"
 
+      - name: Verify actual exported EXE receives pointer events and restores debug save across processes
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $exe = (Resolve-Path "desktop_build/AstralChronicle-M1-Windows-x64.exe").Path
+          $logs = (Resolve-Path "desktop_build").Path
+          foreach ($phase in @("write", "read")) {
+            $log = Join-Path $logs "windows-exe-pointer-$phase.log"
+            $stdout = Join-Path $logs "windows-exe-pointer-$phase-stdout.log"
+            & $exe --headless --log-file "$log" -- --m1-windows-qa $phase 2>&1 | Tee-Object -FilePath $stdout
+            if ($LASTEXITCODE -ne 0) { throw "Windows exported EXE pointer/$phase failed with exit code $LASTEXITCODE" }
+            if (-not (Test-Path -LiteralPath $log)) { throw "Godot log file missing for $phase" }
+            if (Select-String -Path $log -Pattern 'SCRIPT ERROR','Parse Error','ERROR:','M1_WINDOWS_EXE_QA_FAIL') {
+              throw "Windows exported EXE emitted errors during $phase"
+            }
+            $expected = if ($phase -eq "write") { "M1_WINDOWS_EXE_QA_WRITE_PASS" } else { "M1_WINDOWS_EXE_QA_READ_PASS" }
+            if (-not (Select-String -Path $log -SimpleMatch $expected)) {
+              throw "Windows exported EXE $phase did not produce required PASS marker: $expected"
+            }
+          }
+          Write-Host "WINDOWS EXE POINTER + SAVE E2E PASS: STEP / RESET / STEP / SAVE, fresh process read"
+
+
+
       - name: Upload native EXE validation log
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: m1-windows-exported-exe-native-test
-          path: desktop_build/native-exe-startup.log
+          path: |
+            desktop_build/native-exe-startup.log
+            desktop_build/windows-exe-pointer-*.log
           retention-days: 14
           if-no-files-found: ignore
