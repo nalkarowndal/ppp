@@ -144,6 +144,15 @@ func _test_threat_and_taunt() -> void:
 	var current: Dictionary = dealt.step_ticks(1)
 	_expect(int(current["allies"][0].get("threat", -1)) > int(old["allies"][0].get("threat", -1)), "basic attack increases attacker threat")
 
+	## Effective damage, not overkill, must govern accumulated threat.
+	var overkill = Battle.new()
+	var finisher: Dictionary = _unit("FINISHER", "WARRIOR", 10000, 2000)
+	finisher["atk"] = 1000000
+	overkill.setup([finisher], [_unit("ONE_HP", "MELEE", 1)], 25)
+	var before_overkill: int = int(overkill.snapshot()["allies"][0]["threat"])
+	var after_overkill: Dictionary = overkill.step_ticks(1)
+	_expect(int(after_overkill["allies"][0]["threat"]) == before_overkill + 1, "overkill adds only actual HP lost to threat")
+
 func _last_target_after(battle: Variant, ticks: int) -> String:
 	battle.step_ticks(ticks)
 	return _last_target(battle)
