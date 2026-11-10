@@ -11,7 +11,7 @@ permissions:
 jobs:
   emulator-smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 28
     steps:
       - name: Checkout project
         uses: actions/checkout@v4
@@ -113,8 +113,9 @@ jobs:
           target: default
           arch: x86_64
           profile: pixel_2
-          emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu host
-          script: bash scripts/qa/android_emulator_smoke.sh
+          emulator-boot-timeout: 420
+          emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect
+          script: timeout 300s bash scripts/qa/android_emulator_smoke.sh
 
       - name: Upload emulator screenshots and runtime diagnostics
         if: always()
