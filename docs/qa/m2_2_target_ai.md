@@ -23,7 +23,7 @@
 
 - 선택 열에 살아있는 대상이 없으면 다른 열의 생존자로 후퇴합니다.
 - 유닛의 `row`가 유효한 경우 이를 우선 사용하고, 없으면 직업으로 기본 배치 열을 추정합니다. 기존 샘플 적 `DEFENDER`가 세 번째 원소여도 전열로 취급합니다.
-- 기본 위협도: TANK/DEFENDER 100, WARRIOR/MELEE 40, 기타 10. 기본 공격 피해량만큼 공격자의 위협도가 증가하며 1,000,000에 상한을 둡니다.
+- 기본 위협도: TANK/DEFENDER 100, WARRIOR/MELEE 40, 기타 10. 기본 공격에서 **실제로 감소한 HP**만큼 공격자의 위협도가 증가하며(과잉 피해 제외), 1,000,000에 상한을 둡니다.
 - `apply_taunt(team, unit_id, duration_ticks)`: 해당 팀에서 살아있는 유닛의 도발만 허용, 같은 팀 이전 도발은 성공적으로 새로 부여된 경우에만 대체합니다. 도발 타깃이 죽으면 즉시 무시합니다.
 - `taunt_until_tick`은 **끝 틱을 포함하지 않습니다**. tick 0에서 지속 3을 부여하면 tick 1과 2에 유효하고 tick 3부터 기본 타깃 정책입니다.
 - 동일 점수에서는 배치 순서가 앞선 살아있는 유닛을 선택합니다. 타깃 결정을 위해 RNG를 추가 사용하지 않습니다.
@@ -35,7 +35,7 @@
 
 - RED GitHub Actions: [#42777785656](https://github.com/nalkarowndal/ppp/actions/runs/42777785656) (Godot import 및 M2-1 PASS, M2-2 역할/열/도발/위협도 FAIL)
 - GREEN GitHub Actions: [#42777966949](https://github.com/nalkarowndal/ppp/actions/runs/42777966949) (Godot import, M2-1 PASS, M2-2 PASS).
-- 검증 영역: 직업별 공격 대상, 명시적 열 지정, 후열 우회, 전열 섬멸 후 후열 공략, 도발 우선/정확한 만료/사망 무시, 위협도 이동, 같은 시드+배속 재현, 원본 데이터 불변.
+- 검증 영역: 직업별 공격 대상, 명시적 열 지정, 후열 우회, 전열 섬멸 후 후열 공략, 도발 우선/정확한 만료/사망 무시, 위협도 이동·과잉 피해 방지, 같은 시드+배속 재현, 원본 데이터 불변.
 - 파싱/스크립트 오류 및 테스트 실패 로그는 GREEN run에서 발견되지 않았습니다.
 - **이 파일에서 별도의 Android 물리 기기, Windows GUI, 인터랙티브 전투 애니메이션, 5대5 실사용 밸런스 PASS를 주장하지 않습니다.** 그 검사는 각 단계의 후속 게이트입니다.
 
@@ -48,6 +48,13 @@ godot --headless --path . --script res://tests/smoke_test.gd
 godot --headless --path . --script res://tests/m2_combat_core_test.gd
 godot --headless --path . --script res://tests/m2_target_ai_test.gd
 ```
+
+## 추가 회귀 보완 (2026-11-10)
+
+- 위협도는 계산 피해량(원시 damage)이 아니라 적의 실제 감소한 HP를 기준으로 증가해야 합니다.
+- 1HP 적에게 큰 피해를 주는 오버킬 시나리오에서 [RED #42778391458](https://github.com/nalkarowndal/ppp/actions/runs/42778391458)로 해당 오류를 재현.
+- `auto_battle_core.gd`에 `effective_damage = min(calculated_damage, hp_before)`를 적용한 뒤 [GREEN #42778464510](https://github.com/nalkarowndal/ppp/actions/runs/42778464510)에서 M2-1·M2-2 테스트 통과.
+- 전투 로그 `damage`는 기존 계산 피해량 표현을 유지하며, 위협도 증가량에만 실제 감소 HP를 사용합니다. UI 텍스트에서 이를 어떻게 표현할지는 M2-5에서 결정합니다.
 
 ## 남아 있는 개발 항목
 
