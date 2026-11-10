@@ -1,7 +1,7 @@
 name: M1 Android Emulator Runtime QA
 on:
   push:
-    branches: [main, "test/**", "feature/**", "fix/**"]
+    branches: [main]
   pull_request:
     branches: [main]
 

@@ -63,3 +63,24 @@ Android 35 Google APIs + Pixel 6 + SwiftShader 에뮬레이터에서는 메인 �
 - APK 설치와 앱 실행 직후 로그에서 Godot `SceneShaderGLES3: Program linking failed: Fragment shader active uniforms exceed GL_MAX_FRAGMENT_UNIFORM_VECTORS (261)`가 반복되었고, 약 4초 만에 GodotActivity가 종료되어 `pidof` 검증 실패. `M1_UI_READY`만 확인하던 기존 테스트보다 구체적인 렌더 실패 원인 확인.
 - 다음 분리 검증은 Android Emulator ANGLE+SwiftShader Vulkan 번역 경로인 `-gpu swangle_indirect`로 실행. 2025년 Android 35 에뮬레이터 활용 사례에서 사용한 옵션이며 실제 결과를 확인하기 전까지 성공 간주 금지.
 - 이 변경은 **CI 에뮬레이터 설정에만 적용**되며 출시용 Android arm64 앱 렌더러와 Windows EXE의 설정은 변경하지 않는다.
+
+## 2026-11-10 SwANGLE 검증 완료 — 실제 PNG 시각 검수 통과
+
+- **GitHub Actions:** [run #42727828387](https://github.com/nalkarowndal/ppp/actions/runs/42727828387) — `emulator-smoke` PASS.
+- **에뮬레이터:** Android 35, AOSP `default`, Pixel 2 프로필, x86_64, 1080×1920, `-gpu swangle_indirect` (ANGLE → Vulkan SwiftShader).
+- **APK:** x86_64용 디버그 APK 생성·서명·설치 PASS. 기존 Android arm64 내보내기 설정과 Windows EXE는 변경 없음.
+- **앱 실행:** `monkey` 첫 실행, PID 확인, `am force-stop` 및 재실행, Android 심각 로그 검사 PASS.
+- **실제 화면:** `first_launch.png`, `restart_launch.png` 두 PNG를 직접 열어 확인. 모두 초기 개발 UI가 나타나며 'ASTRAL CHRONICLE', 한글 제목·버튼·8명 캐릭터 명세가 읽힘. 시스템 팝업/로딩 로고 없으며 첫 화면의 패널·스크롤 배치에 뚜렷한 겹침/잘림 없음.
+- **자동 픽셀 검사:** 두 이미지 각각 게임 배경 `#111827` 13.3%, 패널 `#222D45` 81.5%로 감지해 스플래시/검은 화면 오검출 방지.
+- **로그:** `M1_UI_READY` 감지, `CanvasShaderGLES3` / `Fragment shader active uniforms exceed` 관련 실패 조건 및 Android fatal exception 없음.
+- **이전 실패와 구분:** `-gpu host` 에뮬레이터 부팅 실패, 순수 SwiftShader GLES3 에뮬레이터 앱 종료 오류는 대체 GPU 모드로 우회된 것이며 모든 GLES3 드라이버에서 해결됐다는 의미는 아님.
+
+### M1의 미완료 승인 조건
+
+- [ ] 실제 Android arm64 기기 설치·터치 조작·화면 안전영역·가독성 확인
+- [ ] Android에서 '1턴 진행/초기화/저장' 버튼 직접 탭, 앱 완전 재시작 후 턴 저장 복원
+- [ ] Windows 데스크톱 GUI 마우스·키보드 및 화면 검수
+- [ ] 프로젝트에 포함하는 한글 폰트 라이선스 및 기기별 폴백 검증
+- [ ] Godot Android 내보내기 경로에서 기존 RID 종료 진단의 심각도 분리
+
+위 항목이 남아 있으므로 **M1 최종 승인 보류, M2 본 구현 미착수**를 유지한다.

@@ -47,3 +47,10 @@ CI 실패 시 병합 금지. CI 미구성 또는 실행 결과 없는 경우 **�
 - Android arm64 Debug APK 생성/서명/패키지: PASS, **실기기 설치 및 동작은 미검증**.
 - 워크플로우: [Windows](https://github.com/nalkarowndal/ppp/actions/runs/42577123154), [Android](https://github.com/nalkarowndal/ppp/actions/runs/42577123146).
 - M1 최종 승인: **보류** (Android 실기기, 터치·안전 영역, 플랫폼 글꼴, Windows 수동 GUI 포함).
+
+## 2026-11-10 M1 Android 에뮬레이터 UI QA
+
+- 공식 Godot 4.7.2 x86_64 Debug APK와 Android 35 AOSP 에뮬레이터 SwANGLE: 설치·실행·강제 종료 후 재실행 **PASS**.
+- 1080×1920 두 화면 PNG 직접 검토, M1 UI 한글 및 패널 렌더 **PASS** (에뮬레이터 한정).
+- 검사 기록: [Actions #42727828387](https://github.com/nalkarowndal/ppp/actions/runs/42727828387), [자세한 검수](m1_android_emulator_qa.md).
+- M1 최종 승인은 **보류**: Android 실제 기기·터치/저장 동작·안전 영역, Windows GUI, 폰트 번들 확인이 필요함.

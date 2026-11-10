@@ -71,3 +71,11 @@
 - 성공 기록: [Windows Actions](https://github.com/nalkarowndal/ppp/actions/runs/42577123154), [Android Actions](https://github.com/nalkarowndal/ppp/actions/runs/42577123146).
 - 추가 임시 에셋: 게임 정식 아트가 아닌 자체 제작 개발용 `assets/icon.svg`.
 - **미검증:** 실제 Android 기기 설치·실행·터치·안전 영역·완전 종료 후 복구·한글 폰트, Windows GUI 수동 사용성. 공식 M1 승인 및 M2 진입은 여전히 보류. [검수 계획](../qa/m1_platform_validation_plan.md).
+
+## M1 Android 에뮬레이터 실사용 화면 검증 (2026-11-10)
+
+- [PR #6](https://github.com/nalkarowndal/ppp/pull/6): Android 35 x86_64 에뮬레이터 앱 설치·최초 실행·강제 종료/재실행 및 실제 게임 화면 캡처를 추가.
+- [Actions 성공 #42727828387](https://github.com/nalkarowndal/ppp/actions/runs/42727828387): SwANGLE GPU 경로에서 화면 색상·Godot UI 초기화·Android 로그 검사 PASS.
+- 실제 1080×1920 PNG 2종 직접 확인: 한글·제목·임시 전투 패널·캐릭터 목록 정상 렌더, 팝업/로고 미표시. 화면은 **M1 임시 UI**이며 정식 도트아트 게임 UI가 아님.
+- 순수 SwiftShader GLES3는 shader uniform linking 오류로 앱이 종료된 이력이 있어, 다른 실기기 그래픽 드라이버까지 통과 주장 금지.
+- Android 실기기 터치/저장·Windows GUI 수동 테스트 등 잔여 승인은 계속 보류. 상세: [M1 에뮬레이터 QA](../qa/m1_android_emulator_qa.md).
