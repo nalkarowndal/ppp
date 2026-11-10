@@ -133,7 +133,7 @@ jobs:
           profile: pixel_2
           emulator-boot-timeout: 420
           emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swangle_indirect
-          script: timeout 300s bash scripts/qa/android_emulator_smoke.sh
+          script: timeout 420s bash -c 'bash scripts/qa/android_emulator_smoke.sh && bash scripts/qa/android_emulator_interaction.sh'
 
       - name: Upload emulator screenshots and runtime diagnostics
         if: always()
