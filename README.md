@@ -50,3 +50,13 @@ Godot 없이 실행할 수 있는 Windows x64 개발용 `.exe`가 GitHub Actions
 ## Windows EXE 실제 포인터 입력 자동검증
 
 [Windows EXE Actions](https://github.com/nalkarowndal/ppp/actions/workflows/m1-windows-desktop-export.yml)는 **내보낸 EXE 자체**를 두 번 실행해 헤드리스 포인터 STEP→RESET→STEP→SAVE 및 저장 후 새로운 프로세스에서 턴 1 복원을 검사합니다. 실제 PC 화면·마우스 직접 검수는 [Windows GUI QA 지침](docs/qa/m1_windows_gui_qa.md)의 수동 절차를 따릅니다. 헤드리스 PASS는 Windows GUI 최종 PASS가 아닙니다.
+
+## M1 실제 Windows PC 및 Android ARM64 기기 검수
+
+[실제 기기 QA 준비 및 증거 수집 절차](docs/qa/m1_physical_device_evidence_qa.md)에 Windows GUI 직접 클릭/캡처와 실제 USB 연결 Android ARM64 휴대전화 터치·저장 복원·안전 영역·한글 검수 방법을 정리했습니다.
+
+- Windows: 기존 `scripts/qa/windows_gui_interactive.ps1`를 실제 **잠금 해제된 QA 계정**에서 실행해야 합니다.
+- Android: `py -3 scripts/qa/android_physical_device_qa.py --apk "path-to-debug.apk"`로 안전한 연결 확인 후, 전용 물리 테스트 기기에서만 `--run`으로 설치/터치 검수를 승인합니다.
+- 휴대전화에 같은 앱이 이미 설치되어 있으면 데이터를 덮어쓰지 않도록 자동으로 중단합니다. 물리 기기 검수 기록은 CI 검사와 엄격히 구분합니다.
+
+**이 도구들이 저장소에 포함된 것만으로 실제 하드웨어 QA가 완료된 것은 아닙니다.** 실제 PC/휴대전화에서 생성한 PNG·입력 로그의 검토 전 M1 최종 승인은 보류합니다.

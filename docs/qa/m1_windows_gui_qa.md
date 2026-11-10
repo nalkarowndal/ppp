@@ -67,3 +67,7 @@ Android arm64 실기기 터치·저장·안전 영역·폰트 검증 역시 별�
 - 기존 PR #8의 [Windows 헤드리스 Godot `tests/windows_pointer_ui_test.gd`](../../tests/windows_pointer_ui_test.gd)와 구분: 이번 테스트는 **에디터 엔진이 아니라 내보낸 EXE 자체**의 버튼 입력을 확인한다.
 - 기존 [실제 Windows GUI harness](../../scripts/qa/windows_gui_interactive.ps1)는 보존하며, 로컬 화면 클릭·스크린샷 직접 검수 및 실제 PC GUI 통과는 별도 미완료이다.
 - Android arm64 실기기 및 Windows 다중 GPU·DPI·한글 폰트도 미검증이므로 M1 최종 승인 **보류**.
+
+## 2026-11-10 물리 디바이스 QA 실험 및 자료 경로
+
+Windows 실화면 검수는 이 페이지의 기존 PowerShell 검수 도구를 사용하며, Android ARM64 USB 디바이스 검수는 [별도 실기기 검수 문서](m1_physical_device_evidence_qa.md) 및 `scripts/qa/android_physical_device_qa.py`를 사용합니다. 실제 Windows 사용자 화면에 접근할 수 없는 GitHub-hosted CI는 물리 GUI 검사를 대체하지 않습니다. 실제 화면 3장 및 사람의 한글·안전 영역 판정이 남아 있습니다.
