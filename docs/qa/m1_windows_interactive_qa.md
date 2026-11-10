@@ -8,7 +8,7 @@
 |---|---|---|---|
 | WIN-01 | Windows GitHub Actions | 공식 Godot 4.7.2로 임포트, GDScript/데이터 테스트 | 0 exit, 스크립트 오류 없음 |
 | WIN-02 | Windows GitHub Actions | **실제 내보낸 EXE**를 `--headless` 실행 | PE 구조·외부 PCK 없음, 실행 0 exit |
-| WIN-03 | Windows GitHub Actions | **실제 내보낸 EXE**에 `Viewport.push_input`으로 마우스 누름/뗌 입력, STEP→RESET→STEP→SAVE | 앱 내부 턴 1→0→1, 파일 쓰기 성공, 두 번째 EXE 프로세스에서 턴 1 복원 |
+| WIN-03 (**헤드리스 PASS**) | Windows GitHub Actions | **실제 내보낸 EXE**에 `Viewport.push_input`으로 마우스 누름/뗌 입력, STEP→RESET→STEP→SAVE | 앱 내부 턴 1→0→1, 파일 쓰기 성공, 두 번째 EXE 프로세스에서 턴 1 복원 |
 | WIN-04 | **사용자 Windows 10/11에서 열린 인터랙티브 데스크톱** | Win32 커서 입력·창 캡처·실제 버튼 클릭 및 재실행 | screenshot 초기/저장/복원, 터치 좌표/로그, 사용자 시각 검수 |
 | WIN-05 | 사용자 PC 환경 | 한글 폰트, 여러 DPI/모니터, 리사이즈, 키보드/마우스, GPU 호환성 | 별도 실기기 체크리스트 |
 
@@ -52,3 +52,8 @@ PowerShell 7이 없다면 Windows PowerShell 5.1에서도 파일 경로를 지�
 최종 M1 승인 **보류**. M2 자동전투 본 구현은 별도 단계다.
 
 참고: [Godot 명령줄 인수](https://docs.godotengine.org/en/4.7/tutorials/editor/command_line_tutorial.html), [Godot Viewport.push_input](https://docs.godotengine.org/en/4.7/classes/class_viewport.html), [Windows 화면 캡처 CopyFromScreen](https://learn.microsoft.com/en-us/dotnet/api/system.drawing.graphics.copyfromscreen).
+
+## 2026-11-10 최초 검증 기록
+
+- [Actions #42763935221](https://github.com/nalkarowndal/ppp/actions/runs/42763935221)에서 내보낸 Windows EXE write/read 테스트 통과: STEP(1)→RESET(0)→STEP(1)→SAVE(1)와 별도 프로세스에서 1턴 복원 마커 확인.
+- `scripts/qa/windows_gui_interactive.ps1`의 구문 검증은 CI에서 수행하되, **로컬 GUI 실제 클릭 테스트는 아직 실행되지 않았음**. 독립 APPDATA 테스트 경로 확인 후에만 로컬 클릭/저장 수행.

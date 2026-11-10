@@ -15,6 +15,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Validate interactive Windows QA PowerShell syntax
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          $file = (Resolve-Path "scripts/qa/windows_gui_interactive.ps1").Path
+          [void][System.Management.Automation.Language.Parser]::ParseFile($file, [ref]$tokens, [ref]$errors)
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Host $_.ToString() }
+            throw "Windows GUI QA script has PowerShell parse errors"
+          }
+          Write-Host "WINDOWS QA SCRIPT SYNTAX PASS: PowerShell parser verified local interactive script"
+
       - name: Install official Godot Windows 4.7.2
         shell: pwsh
         run: |

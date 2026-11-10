@@ -77,3 +77,11 @@ M1은 위 플랫폼 실기기·GUI 검수가 남아 있는 동안 최종 승인 
 - 실제 PE (MZ) 시그니처, 별도 PCK 미생성, EXE 크기, SHA-256 및 실행 파일을 별도 `builds` 경로에서 헤드리스 실행하는지 검증.
 - 통과 시 GitHub Actions `astral-chronicle-m1-windows-x64` 아티팩트 ZIP 생성.
 - **남은 검증:** Windows 사용자 화면의 직접 클릭, 한글 표시, 다중 모니터/해상도, 사용자별 SmartScreen 동작 등은 자동 Headless 빌드만으로 판정할 수 없음.
+
+## 2026-11-10 Windows EXE 포인터·저장 별도 프로세스 QA 보강
+
+- WIN-03: 실제 내보낸 Windows 디버그 EXE에 `--headless -- --m1-windows-qa write` 및 `read`를 순서대로 실행하여 `Viewport.push_input`으로 STEP→RESET→STEP→SAVE 버튼 액션을 검증한다.
+- [Windows EXE CI 성공 #42763935221](https://github.com/nalkarowndal/ppp/actions/runs/42763935221): 입력 이벤트 후 턴 1→0→1, 디버그 저장 파일 기록, 완전히 새로운 EXE 프로세스에서 턴 1 로드 성공.
+- WIN-04: 실제 Windows GUI 클릭·실화면 캡처는 별도 로컬 `scripts/qa/windows_gui_interactive.ps1`에서만 수행한다. 사용자 잠금 해제된 데스크톱 필요. **아직 미실행/미검증**.
+- [자세한 GUI QA 절차](m1_windows_interactive_qa.md)에서 독립 APPDATA 샌드박스, 검수 증거, 미완료 항목 참조.
+- Android arm64 실제 기기 / Windows GUI·GPU / 한글 폰트 검수 완료 전 M1 최종 승인 **보류**.

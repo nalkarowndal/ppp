@@ -63,3 +63,12 @@ CI 실패 시 병합 금지. CI 미구성 또는 실행 결과 없는 경우 **�
 - [ ] 실제 arm64 기기의 터치·안전 영역·한글·성능 수동 검증 (CI로 대체 불가)
 
 검증 코드: `scripts/qa/android_emulator_interaction.sh`, `scripts/ui/main_ui.gd`. CI 통과 전에는 미검증 상태다.
+
+## 2026-11-10 Windows EXE 입력·저장 QA 범위
+
+- [x] 실제 Windows x64 EXE 디버그 빌드에서 Godot Viewport 포인터 입력 및 버튼 이벤트 STEP→RESET→STEP→SAVE 확인 ([Actions #42763935221](https://github.com/nalkarowndal/ppp/actions/runs/42763935221))
+- [x] Windows EXE 별도 프로세스에서 디버그 턴 1 로드 확인
+- [ ] 잠금 해제된 Windows PC에서 실제 마우스 클릭, 초기/저장/재실행 PNG 캡처 및 UI 수동 판정 (전용 `scripts/qa/windows_gui_interactive.ps1` 추가)
+- [ ] Windows 복수 모니터·DPI·GPU 드라이버·한글 및 Android 실제 기기 검수
+
+헤드리스 CI PASS는 물리 Windows GUI PASS가 아니다. 상세 [Windows 인터랙티브 QA](m1_windows_interactive_qa.md).

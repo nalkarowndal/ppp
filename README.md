@@ -46,3 +46,10 @@ Godot 없이 실행할 수 있는 Windows x64 개발용 `.exe`가 GitHub Actions
 - Godot 게임 리소스는 실행 파일에 포함되어 있어 별도 `.pck` 파일이 필요하지 않습니다.
 - **주의:** 개발용 디버그 실행 파일이며 코드 서명되지 않았습니다. Windows SmartScreen 경고가 표시될 수 있습니다. 정식 게임/완성 MVP가 아닙니다.
 - [플랫폼 검증 계획 및 남은 실기기 QA](docs/qa/m1_platform_validation_plan.md)
+
+## M1 Windows EXE 포인터·저장 자동검증 및 실제 GUI 검수
+
+- [Windows Desktop Executable Actions](https://github.com/nalkarowndal/ppp/actions/workflows/m1-windows-desktop-export.yml)는 **내보낸 실행 파일 자체**에서 헤드리스 마우스 입력(STEP→RESET→STEP→SAVE)과 별도 프로세스에서 디버그 턴 복원을 검사합니다.
+- 실제 사용자 Windows 화면에서의 마우스 클릭, PNG 캡처, 한글·해상도 검증은 로컬 인터랙티브 세션에서 [Windows GUI 수동 QA 도구](docs/qa/m1_windows_interactive_qa.md)를 사용하세요.
+- 로컬 QA 도구는 개인 개발용 저장을 보호하도록 독립적인 APPDATA 디렉터리를 사용하고, 격리 경로 확인에 실패하면 쓰기 전 중단합니다.
+- GitHub Actions의 **헤드리스 실행 통과를 물리적 GUI 검수 통과로 간주하지 않습니다.** 현재 M1 최종 승인은 보류 상태입니다.
