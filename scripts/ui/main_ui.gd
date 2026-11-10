@@ -189,6 +189,7 @@ func _qa_start() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	print("M1_QA_SCREEN width=%d height=%d" % [DisplayServer.window_get_size().x, DisplayServer.window_get_size().y])
+	print("M1_QA_USERDATA=%s" % OS.get_user_data_dir())
 	_qa_emit_targets()
 
 func _qa_on_scroll_changed(_value: float) -> void:
