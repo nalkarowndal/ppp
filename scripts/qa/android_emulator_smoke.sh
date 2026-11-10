@@ -9,7 +9,7 @@ mkdir -p "$OUT"
 test -s "$APK"
 
 echo "EMULATOR TEST: device properties"
-adb wait-for-device
+timeout 80s adb wait-for-device
 adb shell getprop ro.product.cpu.abi | tee "$OUT/abi.txt"
 adb shell wm size | tee "$OUT/resolution.txt"
 adb shell getprop sys.boot_completed | tee "$OUT/boot_completed.txt"
@@ -41,7 +41,7 @@ adb shell pidof "$PKG" | tee "$OUT/first_pid.txt"
 test -s "$OUT/first_pid.txt"
 adb exec-out screencap -p > "$OUT/first_launch.png"
 # In case an immersive system dialog remains, fail rather than treating its screenshot as the game.
-adb shell uiautomator dump /sdcard/astral_ui_dump.xml >/dev/null 2>&1 || true
+timeout 25s adb shell uiautomator dump /sdcard/astral_ui_dump.xml >/dev/null 2>&1 || true
 adb shell cat /sdcard/astral_ui_dump.xml > "$OUT/ui_hierarchy.xml" 2>/dev/null || true
 if grep -Fq "Viewing full screen" "$OUT/ui_hierarchy.xml"; then
   echo "ANDROID EMULATOR FAIL: immersive notice still blocks Godot UI"
@@ -71,12 +71,40 @@ for name in sys.argv[1:]:
     print("EMULATOR SCREENSHOT PASS:", name, w, h)
 PY
 
-adb shell uiautomator dump /sdcard/astral_ui_dump_after_restart.xml >/dev/null 2>&1 || true
+timeout 25s adb shell uiautomator dump /sdcard/astral_ui_dump_after_restart.xml >/dev/null 2>&1 || true
 adb shell cat /sdcard/astral_ui_dump_after_restart.xml > "$OUT/restart_ui_hierarchy.xml" 2>/dev/null || true
 if grep -Eiq "isn't responding|not responding|has stopped|Viewing full screen" "$OUT/restart_ui_hierarchy.xml"; then
   echo "ANDROID EMULATOR FAIL: system crash/ANR or immersive-mode overlay obscures game"
   exit 1
 fi
+# Screen-image visual gate: verify Godot's M1 background and panel palette, not merely a valid PNG.
+python3 - "$OUT/first_launch.png" "$OUT/restart_launch.png" <<'PY'
+from pathlib import Path
+from PIL import Image
+import sys
+
+background = (17, 24, 39)  # #111827
+panel = (34, 45, 69)       # #222D45
+for filename in sys.argv[1:]:
+    image = Image.open(filename).convert("RGB")
+    width, height = image.size
+    pixels = image.load()
+    counts = [0, 0]
+    total = 0
+    for y in range(height // 10, height * 9 // 10, 15):
+        for x in range(width // 10, width * 9 // 10, 15):
+            rgb = pixels[x, y]
+            total += 1
+            for idx, target in enumerate((background, panel)):
+                if all(abs(rgb[ch] - target[ch]) <= 22 for ch in range(3)):
+                    counts[idx] += 1
+    ratios = [c / max(total, 1) for c in counts]
+    print("GAME UI PALETTE:", Path(filename).name, "background", round(ratios[0], 3), "panel", round(ratios[1], 3))
+    if min(ratios) < 0.02:
+        raise SystemExit(f"GAME UI VISUAL FAIL: {filename} does not show both Godot M1 screen colors")
+print("ANDROID GAME UI VISUAL CHECK PASS: prototype background and panels visible in both captures")
+PY
+
 adb logcat -d -v time > "$OUT/full_logcat.txt" || true
 grep -Ei 'Godot|M1_UI_READY|AndroidRuntime|FATAL EXCEPTION|Fatal signal|SIGSEGV|SIGABRT' "$OUT/full_logcat.txt" > "$OUT/godot_diagnostics.txt" || true
 adb logcat -d -v time -s AndroidRuntime:E libc:F Godot:E > "$OUT/critical_logcat.txt" || true
