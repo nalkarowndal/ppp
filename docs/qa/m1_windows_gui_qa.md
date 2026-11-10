@@ -60,3 +60,10 @@ pwsh -NoProfile -File scripts/qa/windows_gui_interactive.ps1 `
 - [Windows 대화형 러너 제약](https://github.com/tig/mcec/blob/develop/dev/self-hosted-interactive-runner.md)
 
 Android arm64 실기기 터치·저장·안전 영역·폰트 검증 역시 별도 단계로 유지하며, **M1 최종 승인 보류**.
+
+## 2026-11-10 내보낸 Windows EXE 입력 경로 추가 검증
+
+- [독립 Windows EXE CI #42763935221](https://github.com/nalkarowndal/ppp/actions/runs/42763935221)에서 **실제 내보낸 EXE**를 `--headless -- --m1-windows-qa write` 및 `read`로 별도 실행: STEP→RESET→STEP→SAVE = 턴 1→0→1, 개발용 저장 파일 작성 및 새로운 EXE 프로세스에서 턴 1 복원 PASS.
+- 기존 PR #8의 [Windows 헤드리스 Godot `tests/windows_pointer_ui_test.gd`](../../tests/windows_pointer_ui_test.gd)와 구분: 이번 테스트는 **에디터 엔진이 아니라 내보낸 EXE 자체**의 버튼 입력을 확인한다.
+- 기존 [실제 Windows GUI harness](../../scripts/qa/windows_gui_interactive.ps1)는 보존하며, 로컬 화면 클릭·스크린샷 직접 검수 및 실제 PC GUI 통과는 별도 미완료이다.
+- Android arm64 실기기 및 Windows 다중 GPU·DPI·한글 폰트도 미검증이므로 M1 최종 승인 **보류**.

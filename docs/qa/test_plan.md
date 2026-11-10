@@ -63,3 +63,12 @@ CI 실패 시 병합 금지. CI 미구성 또는 실행 결과 없는 경우 **�
 - [ ] 실제 arm64 기기의 터치·안전 영역·한글·성능 수동 검증 (CI로 대체 불가)
 
 검증 코드: `scripts/qa/android_emulator_interaction.sh`, `scripts/ui/main_ui.gd`. CI 통과 전에는 미검증 상태다.
+
+## Windows 내보낸 EXE 자체 포인터 검증 (2026-11-10)
+
+- [x] 실제 EXE Debug 빌드 `write` 프로세스의 STEP→RESET→STEP→SAVE, 상태·개발용 파일 기록 확인
+- [x] 실제 EXE Debug 빌드 `read` 독립 프로세스에서 저장된 턴 1 확인 (기준 성공 [Actions #42763935221](https://github.com/nalkarowndal/ppp/actions/runs/42763935221))
+- [ ] 실제 Windows 사용자 화면에서 Win32 마우스 클릭 및 PNG 직접 검수, 다중 모니터/DPI·한글 검수
+- [ ] Android arm64 실기기 테스트
+
+상세: [M1 Windows GUI QA](m1_windows_gui_qa.md). CI 헤드리스 통과만으로 M1 승인하지 않는다.
