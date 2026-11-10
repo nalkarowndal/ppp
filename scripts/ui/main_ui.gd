@@ -26,6 +26,7 @@ func _ready() -> void:
 		_sandbox.setup(_roster.slice(0, 3), _enemies[0])
 	_build_ui()
 	_refresh()
+	print("M1_UI_READY: main Control scene loaded")
 	var previous := Save.load_debug_state()
 	if not previous.is_empty():
 		_save_label.text = "이전 개발용 저장: %d턴" % int(previous.get("sandbox_turn", 0))
