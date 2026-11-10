@@ -153,9 +153,11 @@ func _perform_basic_attack(actor: Dictionary) -> void:
 	var variance: float = _rng.randf_range(0.95, 1.05)
 	var element: float = _element_multiplier(str(actor["element"]), str(target["element"]))
 	var damage: int = Damage.calculate(float(actor["atk"]), 1.0, float(target["def"]), element, multiplier, variance)
-	target["hp"] = maxi(0, int(target["hp"]) - damage)
+	var hp_before: int = int(target["hp"])
+	var effective_damage: int = mini(damage, hp_before)
+	target["hp"] = maxi(0, hp_before - damage)
 	actor["energy"] = mini(100, int(actor["energy"]) + 10)
-	actor["threat"] = mini(TargetAI.MAX_THREAT, int(actor["threat"]) + damage)
+	actor["threat"] = mini(TargetAI.MAX_THREAT, int(actor["threat"]) + effective_damage)
 	_events.append({
 		"tick": _ticks,
 		"type": "basic_attack",
