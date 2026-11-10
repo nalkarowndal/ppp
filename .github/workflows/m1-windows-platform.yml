@@ -50,6 +50,13 @@ jobs:
             throw "Save process round-trip did not pass"
           }
           Write-Host "WINDOWS M1 PASS: imports, scripts, UI, separate-process save"
+      - name: Validate interactive Windows GUI harness syntax and Win32 interop (not actual desktop QA)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          pwsh -NoProfile -File scripts/qa/windows_gui_interactive.ps1 -ValidateOnly
+          if ($LASTEXITCODE -ne 0) { throw "PowerShell Windows GUI QA harness preflight failed" }
+
       - name: Upload Windows test logs
         uses: actions/upload-artifact@v4
         if: always()
