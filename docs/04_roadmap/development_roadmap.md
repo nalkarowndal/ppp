@@ -8,7 +8,7 @@
 |---|---|---|
 | M0 | 기술 결정·GDD/QA 문서·Git 저장소 준비 | 문서·환경 기준 수립; Linux Godot 실행 CI 통과, Android 검증 필요 |
 | M1 | 씬·로더·저장·임시 UI 기초 | 임시 씬·로더·UI·저장 구현, Linux CI와 360×800/900 렌더 검증 통과; Android 수동 QA 미통과(승인 보류) |
-| M2 | 3인+보스 전투 코어·상태이상·자동 AI | M2-1 기초 전투 코어 Draft PR #12에서 개발·검증 중; 전체 M2 미완료, M1 최종 실기기 QA 보류 |
+| M2 | 3인+보스 전투 코어·상태이상·자동 AI | M2-1 Draft PR #12, 별도 M2-2 직업/열/위협도·도발 정책 브랜치에서 Godot CI 검증; M2-3~5 미구현, M1 실기기 QA 보류 |
 | M3 | 1~100 레벨·승급·장비·재화·8h 방치 | 미시작; 수식 함수·데이터 일부만 존재 |
 | M4 | 10스테이지 수직슬라이스·보상·진행 저장 | 미시작 |
 | M5 | 12개 UI 화면·공통 Theme·반응형 | 미시작; 임시 UI만 존재 |
@@ -94,3 +94,11 @@
 - **미구현**: 액티브·궁극기, 쿨다운, 상태이상, 피해 외 효과, 실제 전투 화면/UI 통합, 전투 상태 저장.
 - **승인 경계**: 실제 Android ARM64 및 Windows PC 수동 QA 미완료. 기존 M1 기준이나 이슈 #2를 변경·해제하지 않음. M2 전체 완료 선언 및 main 병합은 보류.
 - [M2-1 상세 QA 범위](../qa/m2_1_combat_core.md), [Draft PR #12](https://github.com/nalkarowndal/ppp/pull/12).
+
+## 2026-11-10 M2-2 직업별 타깃 AI 단계
+
+- M2-1 Draft PR #12를 기반으로 `feature/m2-2-target-ai` 브랜치 작업. M1 기존 샌드박스·디버그 저장 유지.
+- 기본 공격의 타깃 정책을 `target_selector.gd`로 분리하고 직업/전열·후열/위협도/도발 우선순위를 결정적 규칙으로 적용.
+- Godot 4.7.2 RED → GREEN 사례: [RED CI #42777785656](https://github.com/nalkarowndal/ppp/actions/runs/42777785656) / [GREEN CI #42777966949](https://github.com/nalkarowndal/ppp/actions/runs/42777966949).
+- 스킬/상태이상/실제 전투 시각 연출·Android 및 Windows 실기기 QA는 완료하지 않음. 따라서 **M2 전체 승인·main 병합 보류**.
+- [M2-2 QA 문서](../qa/m2_2_target_ai.md).
