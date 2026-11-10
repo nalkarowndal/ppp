@@ -93,3 +93,14 @@ Android 35 Google APIs + Pixel 6 + SwiftShader 에뮬레이터에서는 메인 �
 - **증거:** `qa_artifacts/emulator/touch-save-restore.log`, `touch_full_logcat.txt`, `after_save_touch.png`, `after_restore_touch.png`을 아티팩트로 보존한다.
 - **보호:** `pm clear`는 CI 에뮬레이터 전용 테스트 앱에만 적용한다. 실제 개인 휴대전화 데이터를 초기화하지 않는다.
 - **한계:** 통과하더라도 실제 Android arm64 기기의 터치·저장 복원 또는 Windows GUI 수동 조작을 검증한 것은 아니다. M1 저장은 개발 전용이며 M3의 원자적 백업/마이그레이션 저장과 다르다.
+
+### 2026-11-10 에뮬레이터 실제 터치 E2E 결과
+
+**PASS:** [Android Actions #42760648521](https://github.com/nalkarowndal/ppp/actions/runs/42760648521) (Godot 4.7.2, Android 35 x86_64 AOSP, SwANGLE, 1080×1920). 실제 `adb shell input tap`으로 STEP(419,1020) → RESET(920,1020) → STEP(419,1020) → SAVE(530,1339). 로그는 turn 1 → 0 → 1과 `SAVE turn=1 success=1`을 확인했다.
+
+- `pm clear` 후 `M1_QA_RESTORED turn=-1` (저장 없음), 저장 후 `am force-stop` 및 별도 PID 2454→2591에서 `M1_QA_RESTORED turn=1` 확인.
+- `after_restore_touch.png` 실제 화면 검토: **이전 개발용 저장: 1턴**이 올바르게 표시됨. 한글/버튼/패널 잘림이나 시스템 안내 팝업 없음. `after_save_touch.png` 캡처가 UI 갱신 이전 프레임으로 표시될 수 있어 저장 성공 로그와 별개로 그리기 지연 후 캡처하도록 조정.
+- 저장 버튼이 긴 캐릭터 목록 아래에 있어 기존 첫 CI는 터치 스와이프 후 위치 탐지 실패. **UI 배치 변경으로 저장 영역을 캐릭터 목록 위로 이동하여 직접 터치 가능하도록 수정.** 개선 전 [실패 기록 #42759989546](https://github.com/nalkarowndal/ppp/actions/runs/42759989546)과 구분.
+- 한계: 현재 저장 시스템은 **개발용 턴 번호만** 복원한다. 전투 HP/적/전체 상태의 완전 복원·백업·마이그레이션은 구현되지 않았으며 M3 게이트에 속한다. 실제 Android arm64 휴대전화와 Windows GUI 사용자 조작은 미검증.
+
+**최종 M1 승인 보류, 실기기/Windows 수동 Gate 유지.**

@@ -57,9 +57,9 @@ CI 실패 시 병합 금지. CI 미구성 또는 실행 결과 없는 경우 **�
 
 ## M1 Android 실제 터치 및 저장 복원 자동화
 
-- [ ] Android 35 x86_64 에뮬레이터 UI STEP→RESET→STEP→SAVE 실제 `adb shell input tap` / 스와이프
-- [ ] 에뮬레이터 `pm clear` 후 무저장 초기값 및 `am force-stop` 이후 저장된 턴 복원
-- [ ] QA 로그·화면 PNG 보관 및 Android 치명 오류 확인
+- [x] Android 35 x86_64 에뮬레이터 UI STEP→RESET→STEP→SAVE 실제 `adb shell input tap` 동작 확인
+- [x] 에뮬레이터 `pm clear` 후 무저장 초기값 및 `am force-stop` 이후 저장된 턴=1 복원
+- [x] QA 로그·화면 PNG 보관 및 Android 치명 오류 확인 ([Actions #42760648521](https://github.com/nalkarowndal/ppp/actions/runs/42760648521))
 - [ ] 실제 arm64 기기의 터치·안전 영역·한글·성능 수동 검증 (CI로 대체 불가)
 
 검증 코드: `scripts/qa/android_emulator_interaction.sh`, `scripts/ui/main_ui.gd`. CI 통과 전에는 미검증 상태다.

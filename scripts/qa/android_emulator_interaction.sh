@@ -98,6 +98,7 @@ if ! get_target "SAVE" >/dev/null; then
 fi
 tap_target "SAVE"
 check_event "M1_QA_EVENT SAVE turn=1 success=1"
+sleep 2 # Allow a full UI redraw before recording the save-result screenshot.
 adb exec-out screencap -p > "$OUT/after_save_touch.png"
 
 log "ADB_FORCE_STOP and relaunch to verify saved turn from a distinct Android app process"
