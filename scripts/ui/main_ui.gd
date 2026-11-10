@@ -204,5 +204,5 @@ func _qa_target(action: String, button: Button) -> void:
 		return
 	var local_center := button.size * 0.5
 	var screen_pos := get_viewport().get_screen_transform() * button.get_global_transform_with_canvas() * local_center
-	var visible := button.get_global_rect().intersects(_qa_scroll.get_global_rect())
+	var visible := _qa_scroll.get_global_rect().has_point(button.get_global_rect().get_center())
 	print("M1_QA_TARGET %s x=%d y=%d visible=%d" % [action, roundi(screen_pos.x), roundi(screen_pos.y), int(visible)])

@@ -54,3 +54,12 @@ CI 실패 시 병합 금지. CI 미구성 또는 실행 결과 없는 경우 **�
 - 1080×1920 두 화면 PNG 직접 검토, M1 UI 한글 및 패널 렌더 **PASS** (에뮬레이터 한정).
 - 검사 기록: [Actions #42727828387](https://github.com/nalkarowndal/ppp/actions/runs/42727828387), [자세한 검수](m1_android_emulator_qa.md).
 - M1 최종 승인은 **보류**: Android 실제 기기·터치/저장 동작·안전 영역, Windows GUI, 폰트 번들 확인이 필요함.
+
+## M1 Android 실제 터치 및 저장 복원 자동화
+
+- [ ] Android 35 x86_64 에뮬레이터 UI STEP→RESET→STEP→SAVE 실제 `adb shell input tap` / 스와이프
+- [ ] 에뮬레이터 `pm clear` 후 무저장 초기값 및 `am force-stop` 이후 저장된 턴 복원
+- [ ] QA 로그·화면 PNG 보관 및 Android 치명 오류 확인
+- [ ] 실제 arm64 기기의 터치·안전 영역·한글·성능 수동 검증 (CI로 대체 불가)
+
+검증 코드: `scripts/qa/android_emulator_interaction.sh`, `scripts/ui/main_ui.gd`. CI 통과 전에는 미검증 상태다.

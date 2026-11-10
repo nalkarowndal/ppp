@@ -84,3 +84,12 @@ Android 35 Google APIs + Pixel 6 + SwiftShader 에뮬레이터에서는 메인 �
 - [ ] Godot Android 내보내기 경로에서 기존 RID 종료 진단의 심각도 분리
 
 위 항목이 남아 있으므로 **M1 최종 승인 보류, M2 본 구현 미착수**를 유지한다.
+
+## 2026-11-10 M1 Android 터치·저장·재시작 상호작용 자동검증
+
+- **범위:** `scripts/qa/android_emulator_interaction.sh`에서 Android 35 x86_64 에뮬레이터에 ADB 실제 터치 입력을 전달한다. Godot의 `Button.pressed.emit()`로 화면 조작을 흉내 내는 테스트가 아님.
+- **동적 화면 좌표:** 디버그 내보내기에서 `get_viewport().get_screen_transform() * get_global_transform_with_canvas() * local_center`로 화면 좌표를 출력한다. `ScrollContainer`의 스크롤 후에도 다시 좌표를 출력한다.
+- **시나리오:** 에뮬레이터 전용 앱 데이터 초기화 → 실행 시 저장 없음 확인 → '1턴 진행' 터치 후 turn=1 → '초기화' 터치 후 turn=0 → 다시 진행(turn=1) → 터치 스와이프로 저장 버튼 스크롤 → 저장 터치 → Android `am force-stop` → 재실행 후 `M1_QA_RESTORED turn=1` 확인.
+- **증거:** `qa_artifacts/emulator/touch-save-restore.log`, `touch_full_logcat.txt`, `after_save_touch.png`, `after_restore_touch.png`을 아티팩트로 보존한다.
+- **보호:** `pm clear`는 CI 에뮬레이터 전용 테스트 앱에만 적용한다. 실제 개인 휴대전화 데이터를 초기화하지 않는다.
+- **한계:** 통과하더라도 실제 Android arm64 기기의 터치·저장 복원 또는 Windows GUI 수동 조작을 검증한 것은 아니다. M1 저장은 개발 전용이며 M3의 원자적 백업/마이그레이션 저장과 다르다.
