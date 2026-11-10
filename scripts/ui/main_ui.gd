@@ -38,7 +38,8 @@ func _ready() -> void:
 	if not previous.is_empty():
 		_save_label.text = "이전 개발용 저장: %d턴" % int(previous.get("sandbox_turn", 0))
 	if OS.has_feature("debug"):
-		print("M1_QA_RESTORED turn=%d" % int(previous.get("sandbox_turn", -1)))		var qa_args := OS.get_cmdline_user_args()
+		print("M1_QA_RESTORED turn=%d" % int(previous.get("sandbox_turn", -1)))
+		var qa_args := OS.get_cmdline_user_args()
 		if qa_args.size() == 2 and qa_args[0] == "--m1-windows-qa" and qa_args[1] in ["write", "read"]:
 			call_deferred("_qa_windows_run", qa_args[1])
 
