@@ -2,6 +2,7 @@ extends RefCounted
 ## M2-1 provisional combat core. Fixed-step data simulation, intentionally not wired
 ## into the M1 debug UI or game saves. Skill execution/status effects come later.
 const Damage = preload("res://scripts/combat/damage_calculator.gd")
+const TargetAI = preload("res://scripts/combat/target_selector.gd")
 const TICKS_PER_SECOND: int = 20
 const ACTION_GAUGE_REQUIRED: int = 2000
 const MAX_PARTY_SIZE: int = 5
@@ -65,6 +66,46 @@ func step_ticks(count: int = 1) -> Dictionary:
 func advance_frame(speed_multiplier: int = 1) -> Dictionary:
 	return step_ticks(clampi(speed_multiplier, 1, 3))
 
+## A skill may add threat later; current basic attacks accrue threat automatically.
+## False means invalid team/id, a dead unit, nonpositive amount or stopped fight.
+func add_threat(team: String, unit_id: String, amount: int) -> bool:
+	if _state != "running" or amount <= 0:
+		return false
+	var unit: Dictionary = _living_unit(team, unit_id)
+	if unit.is_empty():
+		return false
+	unit["threat"] = mini(TargetAI.MAX_THREAT, int(unit["threat"]) + mini(TargetAI.MAX_THREAT, amount))
+	return true
+
+## Timed targeting override; not an implemented status effect or taunt skill.
+## Expiry is exclusive: cast at tick 0 for 3 ticks targets at ticks 1 and 2,
+## then defaults to normal AI targeting on tick 3.
+func apply_taunt(team: String, unit_id: String, duration_ticks: int) -> bool:
+	if _state != "running" or duration_ticks <= 0:
+		return false
+	var source: Dictionary = _living_unit(team, unit_id)
+	if source.is_empty():
+		return false
+	var members: Array = _allies if team == "ally" else _enemies
+	for unit in members:
+		unit["taunt_until_tick"] = 0
+	var remaining: int = maxi(0, _time_limit_ticks - _ticks + 1)
+	source["taunt_until_tick"] = _ticks + mini(duration_ticks, remaining)
+	return true
+
+func _living_unit(team: String, unit_id: String) -> Dictionary:
+	var members: Array = []
+	if team == "ally":
+		members = _allies
+	elif team == "enemy":
+		members = _enemies
+	else:
+		return {}
+	for unit in members:
+		if str(unit.get("id", "")) == unit_id and int(unit.get("hp", 0)) > 0:
+			return unit
+	return {}
+
 func snapshot() -> Dictionary:
 	return {
 		"state": _state,
@@ -79,12 +120,16 @@ func snapshot() -> Dictionary:
 func _make_unit(source: Dictionary, team: String, slot: int) -> Dictionary:
 	var stats: Dictionary = source.get("base_stats", source)
 	var hp: int = maxi(1, int(stats.get("hp", 1)))
+	var role: String = str(source.get("role", "MELEE"))
 	return {
 		"id": str(source.get("id", "%s_%d" % [team, slot])),
 		"name": str(source.get("name", "?")),
 		"team": team,
 		"slot": slot,
-		"role": str(source.get("role", "MELEE")),
+		"role": role,
+		"row": TargetAI.initial_row(source, slot),
+		"threat": TargetAI.initial_threat(role),
+		"taunt_until_tick": 0,
 		"element": str(source.get("element", "NEUTRAL")),
 		"hp": hp,
 		"max_hp": hp,
@@ -100,7 +145,7 @@ func _make_unit(source: Dictionary, team: String, slot: int) -> Dictionary:
 
 func _perform_basic_attack(actor: Dictionary) -> void:
 	var targets: Array = _enemies if str(actor["team"]) == "ally" else _allies
-	var target: Dictionary = _choose_target(actor, targets)
+	var target: Dictionary = TargetAI.choose(actor, targets, _ticks)
 	if target.is_empty():
 		return
 	var is_critical: bool = _rng.randf() < float(actor["crit"])
@@ -110,6 +155,7 @@ func _perform_basic_attack(actor: Dictionary) -> void:
 	var damage: int = Damage.calculate(float(actor["atk"]), 1.0, float(target["def"]), element, multiplier, variance)
 	target["hp"] = maxi(0, int(target["hp"]) - damage)
 	actor["energy"] = mini(100, int(actor["energy"]) + 10)
+	actor["threat"] = mini(TargetAI.MAX_THREAT, int(actor["threat"]) + damage)
 	_events.append({
 		"tick": _ticks,
 		"type": "basic_attack",
@@ -121,25 +167,6 @@ func _perform_basic_attack(actor: Dictionary) -> void:
 	if _events.size() > MAX_EVENT_HISTORY:
 		_events.pop_front()
 	_check_result()
-
-func _choose_target(actor: Dictionary, opponents: Array) -> Dictionary:
-	var alive: Array = []
-	for target in opponents:
-		if int(target["hp"]) > 0:
-			alive.append(target)
-	if alive.is_empty():
-		return {}
-	## Assassin can bypass frontliners and prioritize backline units.
-	if str(actor["role"]) == "ASSASSIN":
-		for target in alive:
-			if int(target["slot"]) >= 2 or str(target["role"]) == "RANGED":
-				return target
-	## Tanks/defenders are targeted first to keep baseline combat readable.
-	for target in alive:
-		if str(target["role"]) in ["TANK", "DEFENDER"]:
-			return target
-	## Remaining foes are selected in stable deployment order.
-	return alive[0]
 
 func _element_multiplier(attacker: String, defender: String) -> float:
 	var favored := {
