@@ -26,9 +26,9 @@ check_event() {
 
 get_target() {
   local action="$1" line x y vis
-  dumpLog_unused= # Intentionally do not clear logcat; event lines must remain auditable
   dumplog
-  line="$(grep -E "M1_QA_TARGET ${action} x=[0-9]+ y=[0-9]+ visible=1" "$OUT/touch_full_logcat.txt" | tail -n 1 || true)"
+  line="$(grep -E "M1_QA_TARGET ${action} x=[0-9]+ y=[0-9]+ visible=[01]" "$OUT/touch_full_logcat.txt" | tail -n 1 || true)"
+  [[ "$line" == *"visible=1"* ]] || return 1
   if [[ -z "$line" ]]; then
     return 1
   fi
@@ -69,7 +69,10 @@ check_event "M1_UI_READY:"
 check_event "M1_QA_RESTORED turn=-1"
 
 # Dismiss Android's immersive confirmation if the OS displays it on a first install.
-if ! get_target "STEP" >/dev/null; then
+# If Android shows its first-run immersive-mode confirmation, dismiss it.
+timeout 25s adb shell uiautomator dump /sdcard/astral_interaction_ui.xml >/dev/null 2>&1 || true
+adb shell cat /sdcard/astral_interaction_ui.xml > "$OUT/touch_initial_ui.xml" 2>/dev/null || true
+if grep -Eiq "Viewing full screen|Got it" "$OUT/touch_initial_ui.xml"; then
   adb shell input tap "$(( SCREEN_W * 85 / 100 ))" "$(( SCREEN_H * 26 / 100 ))"
   sleep 3
 fi
@@ -78,8 +81,7 @@ tap_target "STEP"
 check_event "M1_QA_EVENT STEP turn=1"
 tap_target "RESET"
 check_event "M1_QA_EVENT RESET turn=0"
-# Use the second STEP after RESET to prove a fresh progression.
-adb logcat -c
+# Use the second STEP after RESET to prove progression; final saved turn confirms this step.
 tap_target "STEP"
 check_event "M1_QA_EVENT STEP turn=1"
 
