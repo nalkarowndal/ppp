@@ -66,3 +66,4 @@ Godot 없이 실행할 수 있는 Windows x64 개발용 `.exe`가 GitHub Actions
 - [Draft PR #12](https://github.com/nalkarowndal/ppp/pull/12)에서 M1 디버그 샌드박스와 분리된 20Hz 기본 공격 자동전투 코어를 검증합니다.
 - 실행: `godot --headless --path . --script res://tests/m2_combat_core_test.gd` (해당 브랜치에서 실행).
 - [M2-1 구현 범위 및 남은 승인 조건](docs/qa/m2_1_combat_core.md) 참고. 스킬·상태이상·실제 전투 화면은 후속이며, 현재 M2 전체 마일스톤은 미완료입니다.
+- M2-2 실험 브랜치 `feature/m2-2-target-ai`: 직업별 타깃, 전·후열, 위협도·도발 정책 및 [M2-2 자동 QA](docs/qa/m2_2_target_ai.md) 추가. `tests/m2_target_ai_test.gd`를 전용 CI에서 실행하며, M2 전체 승인이나 게임 UI 통합을 의미하지 않습니다.
