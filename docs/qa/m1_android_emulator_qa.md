@@ -49,3 +49,10 @@ Android 35 Google APIs + Pixel 6 + SwiftShader 에뮬레이터에서는 메인 �
 완화 실험: AOSP 기본 시스템 이미지(기존 Pixel Launcher 없음) + 에뮬레이터 `-gpu host` 방식으로 변경한다. 그래픽 셰이더 오류 또는 시스템 ANR 문자열을 실제 QA 실패로 처리한다. CI 결과를 재확인하기 전에는 Android 그래픽 성공을 주장하지 않는다.
 
 참고 Godot 이슈: https://github.com/godotengine/godot/issues/109550
+
+## 2026-11-10: CI 가상 기기 부팅 실패에 따른 복구
+
+- PR #6 커밋 `5447808`의 `target: default` + `-gpu host`는 Ubuntu GitHub 러너에서 부팅 완료 응답을 받지 못했고, 2026-11-09 GitHub Actions 에뮬레이터 2개 실행이 50분 시점 취소됨. **기존 화면 오류를 해결했다는 증거가 아니다.**
+- 호스트 GPU 의존을 제거하기 위해 기존 정상 부팅된 `-gpu swiftshader_indirect`로 복구, 에뮬레이터 부팅 제한 420초와 테스트 스크립트 300초 제한 설정.
+- UI 판정을 강화하기 위해 Pillow 이미지 샘플 검사로 게임 M1 컬러 팔레트 `#111827` 배경, `#222D45` 카드가 두 스크린샷에 실재하는지 검사. PNG 자체가 유효하고 `M1_UI_READY`만 기록됐다고 통과하지 않음.
+- GUI 확인을 위한 Android 시스템 팝업, GLSL 오류, ANR 탐지는 유지. 이 설정의 CI 결과가 나오기 전까지 Android GUI 시각 QA는 실패/미통과 상태.
