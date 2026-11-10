@@ -72,3 +72,12 @@ CI 실패 시 병합 금지. CI 미구성 또는 실행 결과 없는 경우 **�
 - [ ] Android arm64 실기기 테스트
 
 상세: [M1 Windows GUI QA](m1_windows_gui_qa.md). CI 헤드리스 통과만으로 M1 승인하지 않는다.
+
+## M1 실제 장비 검수 착수 준비 (2026-11-10)
+
+- [x] Windows GUI 로컬 클릭·저장·PNG 수집 스크립트 구비
+- [x] Android ARM64 실제 USB 기기의 사전 검사·입력·저장·safe-area 텔레메트리 수집 스크립트와 비파괴 안전성 단위 테스트 추가
+- [ ] Windows 실제 데스크톱에서 실행, 화면 캡처 3장·한글·DPI·클릭 검사
+- [ ] Android 실제 ARM64에서 APK 실행·터치·턴 저장 복원·노치 및 한글 PNG 검사
+
+증거·절차: [실제 장비 검수 가이드](m1_physical_device_evidence_qa.md). 자동 CI에서 스크립트 자체가 통과해도 실기기 PASS가 아니다.

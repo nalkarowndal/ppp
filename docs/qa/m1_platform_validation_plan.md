@@ -83,3 +83,16 @@ M1은 위 플랫폼 실기기·GUI 검수가 남아 있는 동안 최종 승인 
 - 실제 Windows x64 Debug EXE의 `--headless -- --m1-windows-qa write/read` 두 프로세스에서 Godot Viewport 마우스 입력 STEP→RESET→STEP→SAVE와 턴 1 복원 자동 테스트 성공: [Actions #42763935221](https://github.com/nalkarowndal/ppp/actions/runs/42763935221).
 - Windows 엔진 GDScript 포인터 시험(PR #8)과 별도로 **사용자가 받는 EXE 본체**의 이벤트·저장을 검사한다.
 - 로컬 Windows 잠금 해제된 화면에서 실제 클릭·3종 PNG 검사 미완료: [검수 절차](m1_windows_gui_qa.md). M1 최종 승인 보류.
+
+## 2026-11-10 실제 Windows 및 Android ARM64 물리 기기 검수 시작
+
+- [실기기 검수 실행 절차](m1_physical_device_evidence_qa.md)를 별도 문서화함.
+- ARM64 물리 Android 디바이스 ADB 프리플라이트·비에뮬레이터 확인·APK 신규 설치·실제 화면 좌표 터치(STEP→RESET→STEP→SAVE)·강제 종료 후 저장 복원을 검증할 **로컬 전용 도구** `scripts/qa/android_physical_device_qa.py` 추가.
+- Godot 모바일 UI 디버그 빌드에서 `DisplayServer.get_display_safe_area()` 및 cutout 크기·개수를 이벤트 로그로 노출하여 실제 화면 노치/인셋 검사 자료 확보.
+- 기존 Windows PC 인터랙티브 GUI 검수 스크립트 재사용: 실화면 클릭 및 PNG 3장·저장 복원 확인.
+- 안전 정책: 이미 설치된 Android 앱은 절대 지우거나 덮어쓰지 않음. 자동 APK 설치는 명시적인 `--run`에서만 허용. 폰의 개인 로그 전체/시리얼 정보를 수집하지 않음.
+- GitHub CI는 이 스크립트의 구문·모의 안전성 테스트만 실행하며 **USB 실제 기기 테스트가 아님**.
+- [ ] Windows 실제 PC GUI 클릭/화면 PNG를 사람이 확인
+- [ ] Android ARM64 실제 전화기에서 터치/저장/안전 영역/한글 PNG를 사람이 확인
+
+**M1 승인 보류**, 기기 테스트 미수행 상태 유지.

@@ -190,6 +190,13 @@ func _qa_start() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 	print("M1_QA_SCREEN width=%d height=%d" % [DisplayServer.window_get_size().x, DisplayServer.window_get_size().y])
+	if OS.has_feature("mobile"):
+		var safe_area: Rect2i = DisplayServer.get_display_safe_area()
+		var cutouts: Array[Rect2] = DisplayServer.get_display_cutouts()
+		print("M1_QA_SAFE_AREA x=%d y=%d width=%d height=%d cutouts=%d" % [
+			safe_area.position.x, safe_area.position.y, safe_area.size.x,
+			safe_area.size.y, cutouts.size()
+		])
 	_qa_emit_targets()
 
 func _qa_on_scroll_changed(_value: float) -> void:

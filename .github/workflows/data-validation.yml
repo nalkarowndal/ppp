@@ -14,3 +14,8 @@ jobs:
           python-version: "3.11"
       - name: Validate game data
         run: python scripts/validate_data.py
+      - name: Check physical Android QA harness syntax and parser only (no device)
+        run: |
+          python -m py_compile scripts/qa/android_physical_device_qa.py
+          python scripts/qa/android_physical_device_qa.py --self-test
+          python -m unittest discover -s tests -p 'test_android_physical_device_qa.py' -v
