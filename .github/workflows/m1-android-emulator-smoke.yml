@@ -46,8 +46,18 @@ jobs:
         run: |
           set -euo pipefail
           : "${ANDROID_HOME:?Missing Android SDK}"
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_HOME" \
-            "platform-tools" "build-tools;35.0.1" "platforms;android-35"
+          # GitHub's Ubuntu image may already include all required Android SDK tools.
+          # Avoid blocking on unnecessary sdkmanager network calls.
+          missing=()
+          test -x "$ANDROID_HOME/platform-tools/adb" || missing+=("platform-tools")
+          test -x "$ANDROID_HOME/build-tools/35.0.1/apksigner" || missing+=("build-tools;35.0.1")
+          test -f "$ANDROID_HOME/platforms/android-35/android.jar" || missing+=("platforms;android-35")
+          if (( ${#missing[@]} > 0 )); then
+            echo "Installing missing Android SDK packages: ${missing[*]}"
+            timeout 180s "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_HOME" "${missing[@]}"
+          else
+            echo "ANDROID SDK READY: using preinstalled platform-tools, build-tools 35.0.1, platform 35"
+          fi
           keytool -genkeypair -v -keystore "$RUNNER_TEMP/ci-emulator-debug.keystore" \
             -alias androiddebugkey -storepass android -keypass android \
             -keyalg RSA -keysize 2048 -validity 3650 -dname "CN=Android Debug,O=Android,C=US"
