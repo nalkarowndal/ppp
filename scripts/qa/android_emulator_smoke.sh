@@ -6,6 +6,13 @@ PKG="org.astralchronicle.prototype"
 APK="builds/astral-chronicle-m1-emulator-x86_64.apk"
 OUT="qa_artifacts/emulator"
 mkdir -p "$OUT"
+# Retain Android diagnostic logs even when a visual assertion fails early.
+collect_android_logcat() {
+  adb logcat -d -v time > "$OUT/full_logcat.txt" 2>/dev/null || true
+  grep -Ei 'Godot|M1_UI_READY|AndroidRuntime|FATAL EXCEPTION|Fatal signal|SIGSEGV|SIGABRT' "$OUT/full_logcat.txt" > "$OUT/godot_diagnostics.txt" 2>/dev/null || true
+}
+trap collect_android_logcat EXIT
+
 test -s "$APK"
 
 echo "EMULATOR TEST: device properties"
