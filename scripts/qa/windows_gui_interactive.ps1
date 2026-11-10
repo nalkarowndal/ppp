@@ -63,6 +63,16 @@ function Start-Game([string]$label) {
     $script:proc = Start-Process -FilePath $exe -ArgumentList $args -PassThru
     Wait-Log "M1_UI_READY:" 0 40
     Wait-Log "M1_QA_TARGET STEP" 0 15
+    Wait-Log "M1_QA_USERDATA=" 0 10
+    # Refuse to modify the person's normal Godot save directory.
+    $paths = [regex]::Matches((Read-Log), "M1_QA_USERDATA=([^\r\n]+)")
+    if ($paths.Count -lt 1) { throw "Godot did not report its user-data directory" }
+    $actual = [IO.Path]::GetFullPath($paths[$paths.Count - 1].Groups[1].Value.Trim())
+    $prefix = [IO.Path]::GetFullPath($sandbox).TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
+    if (-not $actual.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase)) {
+        throw "ABORT: Godot user data resolves OUTSIDE test sandbox ($actual). No clicks or saves performed."
+    }
+
     $deadline = (Get-Date).AddSeconds(20)
     while ((Get-Date) -lt $deadline) {
         $script:proc.Refresh()
