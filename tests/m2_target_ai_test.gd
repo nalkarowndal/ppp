@@ -88,7 +88,7 @@ func _test_frontline_depletion() -> void:
 		for event in events:
 			ids.append(str(event.get("target_id", "")))
 		_expect(ids == ["FRONT_DEF", "FRONT_MELEE", "BACK_RANGE"], "front row clears before back row")
-	_expect(str(state["enemies"][0]["row"]) == "FRONT" and str(state["enemies"][2]["row"]) == "BACK", "formation stored in runtime units")
+	_expect(str(state["enemies"][0].get("row", "")) == "FRONT" and str(state["enemies"][2].get("row", "")) == "BACK", "formation stored in runtime units")
 	_expect(not _enemy_team()[0].has("threat"), "fixture input not mutated")
 
 func _test_threat_and_taunt() -> void:
