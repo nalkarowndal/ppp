@@ -17,6 +17,10 @@ var _status_label: Label
 var _enemy_label: Label
 var _party_label: Label
 var _save_label: Label
+var _qa_step_button: Button
+var _qa_reset_button: Button
+var _qa_save_button: Button
+var _qa_scroll: ScrollContainer
 
 func _ready() -> void:
 	_setup_fonts()
@@ -27,9 +31,14 @@ func _ready() -> void:
 	_build_ui()
 	_refresh()
 	print("M1_UI_READY: main Control scene loaded")
+	if OS.has_feature("debug"):
+		_qa_scroll.get_v_scroll_bar().value_changed.connect(_qa_on_scroll_changed)
+		_qa_start()
 	var previous := Save.load_debug_state()
 	if not previous.is_empty():
 		_save_label.text = "이전 개발용 저장: %d턴" % int(previous.get("sandbox_turn", 0))
+	if OS.has_feature("debug"):
+		print("M1_QA_RESTORED turn=%d" % int(previous.get("sandbox_turn", -1)))
 
 func _setup_fonts() -> void:
 	## M1 uses platform system font; portable OFL font asset is a later export gate.
@@ -62,6 +71,7 @@ func _build_ui() -> void:
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	root.add_child(scroll)
+	_qa_scroll = scroll
 	var content := VBoxContainer.new()
 	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	content.add_theme_constant_override("separation", 12)
@@ -86,11 +96,13 @@ func _build_ui() -> void:
 	action.custom_minimum_size.y = 52
 	action.pressed.connect(_on_step_pressed)
 	controls.add_child(action)
+	_qa_step_button = action
 	var restart := Button.new()
 	restart.text = "초기화"
 	restart.custom_minimum_size = Vector2(85, 52)
 	restart.pressed.connect(_on_reset_pressed)
 	controls.add_child(restart)
+	_qa_reset_button = restart
 
 	var units := _section(content)
 	_text(units, "캐릭터 데이터 연결", 17, GOLD)
@@ -107,6 +119,7 @@ func _build_ui() -> void:
 	save_button.custom_minimum_size.y = 48
 	save_button.pressed.connect(_on_save_pressed)
 	save_section.add_child(save_button)
+	_qa_save_button = save_button
 
 	var footer := _section(root)
 	_text(footer, "전투 · 동료 · 탐험 · 거점 · 메뉴  (추후 구현)", 12, MUTED)
@@ -151,13 +164,45 @@ func _refresh() -> void:
 func _on_step_pressed() -> void:
 	_sandbox.step()
 	_refresh()
+	if OS.has_feature("debug"):
+		print("M1_QA_EVENT STEP turn=%d" % int(_sandbox.snapshot().get("turn", -1)))
 
 func _on_reset_pressed() -> void:
 	if _roster.size() >= 3 and not _enemies.is_empty():
 		_sandbox.setup(_roster.slice(0, 3), _enemies[0])
 	_refresh()
+	if OS.has_feature("debug"):
+		print("M1_QA_EVENT RESET turn=%d" % int(_sandbox.snapshot().get("turn", -1)))
 
 func _on_save_pressed() -> void:
 	var current: Dictionary = _sandbox.snapshot()
 	var ok := Save.save_debug_state({"sandbox_turn": int(current["turn"])})
 	_save_label.text = "개발용 저장 성공" if ok else "개발용 저장 실패"
+	if OS.has_feature("debug"):
+		print("M1_QA_EVENT SAVE turn=%d success=%d" % [int(current.get("turn", -1)), int(ok)])
+
+## Debug-export-only UI geometry and action evidence for real ADB screen touches.
+## Uses Godot's canvas-to-physical-screen transform, not hard-coded pixel taps.
+func _qa_start() -> void:
+	await get_tree().process_frame
+	await get_tree().process_frame
+	print("M1_QA_SCREEN width=%d height=%d" % [DisplayServer.window_get_size().x, DisplayServer.window_get_size().y])
+	_qa_emit_targets()
+
+func _qa_on_scroll_changed(_value: float) -> void:
+	call_deferred("_qa_emit_targets")
+
+func _qa_emit_targets() -> void:
+	if not OS.has_feature("debug") or not is_inside_tree():
+		return
+	_qa_target("STEP", _qa_step_button)
+	_qa_target("RESET", _qa_reset_button)
+	_qa_target("SAVE", _qa_save_button)
+
+func _qa_target(action: String, button: Button) -> void:
+	if button == null or _qa_scroll == null:
+		return
+	var local_center := button.size * 0.5
+	var screen_pos := get_viewport().get_screen_transform() * button.get_global_transform_with_canvas() * local_center
+	var visible := button.get_global_rect().intersects(_qa_scroll.get_global_rect())
+	print("M1_QA_TARGET %s x=%d y=%d visible=%d" % [action, roundi(screen_pos.x), roundi(screen_pos.y), int(visible)])
