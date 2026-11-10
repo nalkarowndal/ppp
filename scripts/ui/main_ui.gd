@@ -38,7 +38,9 @@ func _ready() -> void:
 	if not previous.is_empty():
 		_save_label.text = "이전 개발용 저장: %d턴" % int(previous.get("sandbox_turn", 0))
 	if OS.has_feature("debug"):
-		print("M1_QA_RESTORED turn=%d" % int(previous.get("sandbox_turn", -1)))
+		print("M1_QA_RESTORED turn=%d" % int(previous.get("sandbox_turn", -1)))		var qa_args := OS.get_cmdline_user_args()
+		if qa_args.size() == 2 and qa_args[0] == "--m1-windows-qa" and qa_args[1] in ["write", "read"]:
+			call_deferred("_qa_windows_run", qa_args[1])
 
 func _setup_fonts() -> void:
 	## M1 uses platform system font; portable OFL font asset is a later export gate.
@@ -206,3 +208,56 @@ func _qa_target(action: String, button: Button) -> void:
 	var screen_pos := get_viewport().get_screen_transform() * button.get_global_transform_with_canvas() * local_center
 	var visible := _qa_scroll.get_global_rect().has_point(button.get_global_rect().get_center())
 	print("M1_QA_TARGET %s x=%d y=%d visible=%d" % [action, roundi(screen_pos.x), roundi(screen_pos.y), int(visible)])
+
+## M1 Windows exported executable: real viewport-pointer injection through Godot,
+## not a physical Windows mouse click. Interactive desktop mouse QA is a separate gate.
+func _qa_windows_run(phase: String) -> void:
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if phase == "read":
+		var loaded: Dictionary = Save.load_debug_state()
+		var success := int(loaded.get("schema_version", 0)) == 1 and int(loaded.get("sandbox_turn", -1)) == 1 and _save_label.text.contains("1턴")
+		if success:
+			print("M1_WINDOWS_EXE_QA_READ_PASS turn=1 in fresh process")
+		else:
+			push_error("M1_WINDOWS_EXE_QA_READ_FAIL no saved turn=1 in fresh process")
+		get_tree().quit(0 if success else 1)
+		return
+	for action in ["STEP", "RESET", "STEP", "SAVE"]:
+		var button: Button = _qa_step_button if action == "STEP" else (_qa_reset_button if action == "RESET" else _qa_save_button)
+		if not _qa_scroll.get_global_rect().has_point(button.get_global_rect().get_center()):
+			push_error("M1_WINDOWS_EXE_QA_FAIL: %s is not in scroll view" % action)
+			get_tree().quit(1)
+			return
+		var point := button.get_global_transform_with_canvas() * (button.size * 0.5)
+		var down := InputEventMouseButton.new()
+		down.button_index = MOUSE_BUTTON_LEFT
+		down.button_mask = MOUSE_BUTTON_MASK_LEFT
+		down.position = point
+		down.global_position = point
+		down.pressed = true
+		get_viewport().push_input(down, true)
+		await get_tree().process_frame
+		var up := InputEventMouseButton.new()
+		up.button_index = MOUSE_BUTTON_LEFT
+		up.button_mask = 0
+		up.position = point
+		up.global_position = point
+		up.pressed = false
+		get_viewport().push_input(up, true)
+		await get_tree().process_frame
+		var turn := int(_sandbox.snapshot().get("turn", -1))
+		var expected := 0 if action == "RESET" else 1
+		if turn != expected:
+			push_error("M1_WINDOWS_EXE_QA_FAIL %s expected turn=%d got=%d" % [action, expected, turn])
+			get_tree().quit(1)
+			return
+		if action == "SAVE":
+			var saved: Dictionary = Save.load_debug_state()
+			if int(saved.get("sandbox_turn", -1)) != 1 or not _save_label.text.contains("저장 성공"):
+				push_error("M1_WINDOWS_EXE_QA_FAIL SAVE turn or label mismatch")
+				get_tree().quit(1)
+				return
+		print("M1_WINDOWS_EXE_QA_POINTER_PASS %s turn=%d" % [action, turn])
+	print("M1_WINDOWS_EXE_QA_WRITE_PASS saved turn=1")
+	get_tree().quit(0)
