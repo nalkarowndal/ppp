@@ -104,13 +104,6 @@ func _build_ui() -> void:
 	controls.add_child(restart)
 	_qa_reset_button = restart
 
-	var units := _section(content)
-	_text(units, "캐릭터 데이터 연결", 17, GOLD)
-	for entry in _roster:
-		if typeof(entry) == TYPE_DICTIONARY:
-			var stats: Dictionary = entry.get("base_stats", {})
-			_text(units, "%s · %s / %s · HP %d / ATK %d" % [str(entry.get("name", "?")), str(entry.get("role", "")), str(entry.get("element", "")), int(stats.get("hp", 0)), int(stats.get("atk", 0))], 12, MUTED)
-
 	var save_section := _section(content)
 	_text(save_section, "개발용 저장 확인", 16, GOLD)
 	_save_label = _text(save_section, "저장 기록 없음", 12, MUTED)
@@ -120,6 +113,13 @@ func _build_ui() -> void:
 	save_button.pressed.connect(_on_save_pressed)
 	save_section.add_child(save_button)
 	_qa_save_button = save_button
+
+	var units := _section(content)
+	_text(units, "캐릭터 데이터 연결", 17, GOLD)
+	for entry in _roster:
+		if typeof(entry) == TYPE_DICTIONARY:
+			var stats: Dictionary = entry.get("base_stats", {})
+			_text(units, "%s · %s / %s · HP %d / ATK %d" % [str(entry.get("name", "?")), str(entry.get("role", "")), str(entry.get("element", "")), int(stats.get("hp", 0)), int(stats.get("atk", 0))], 12, MUTED)
 
 	var footer := _section(root)
 	_text(footer, "전투 · 동료 · 탐험 · 거점 · 메뉴  (추후 구현)", 12, MUTED)
