@@ -12,7 +12,7 @@ Add predictable role-aware basic-attack target AI to the existing fixed-step com
 ## Rules
 1. Runtime unit fields: `row` (FRONT/BACK), `threat` (nonnegative integer), `taunt_until_tick` (exclusive tick).
 2. Row is explicit when valid; otherwise infer from TANK/WARRIOR/MELEE/DEFENDER as FRONT, MAGE/ARCHER/RANGED/SUPPORT/ASSASSIN as BACK, or positional slot fallback. Roster legality and 2+3 lineup validation come later.
-3. Role base threat: TANK/DEFENDER 100, WARRIOR/MELEE 40, other roles 10. After attacking, actor accrues threat equal to damage dealt, capped to 1,000,000; `add_threat(team, id, amount)` provides a future skill hook.
+3. Role base threat: TANK/DEFENDER 100, WARRIOR/MELEE 40, other roles 10. After attacking, actor accrues threat equal to HP actually removed from the target (overkill excluded), capped to 1,000,000; `add_threat(team, id, amount)` provides a future skill hook.
 4. A live taunter overrides role, row and threat until tick `now >= taunt_until_tick`. `apply_taunt(team, id, duration_ticks)` replaces any current taunt on that same team. Dead, missing, invalid/expired sources cannot force targeting. Hooks return bool for accepted input.
 5. ASSASSIN targets BACK first, then the lowest current HP (stable tie by slot). MAGE/ARCHER/RANGED target FRONT first and lowest current HP. TANK/DEFENDER/WARRIOR/MELEE/SUPPORT and unknown roles target FRONT first and highest threat. If the desired row is empty, use surviving enemies on the other row.
 6. No random rolls during target choice; ties are stable by original encounter order. The existing damage RNG remains unchanged. Dead units cannot be targeted.
