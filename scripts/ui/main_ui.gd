@@ -206,3 +206,6 @@ func _qa_target(action: String, button: Button) -> void:
 	var screen_pos := get_viewport().get_screen_transform() * button.get_global_transform_with_canvas() * local_center
 	var visible := _qa_scroll.get_global_rect().has_point(button.get_global_rect().get_center())
 	print("M1_QA_TARGET %s x=%d y=%d visible=%d" % [action, roundi(screen_pos.x), roundi(screen_pos.y), int(visible)])
+	if OS.has_feature("windows"):
+		var win_client := button.get_global_transform_with_canvas() * local_center
+		print("M1_QA_WIN_CLIENT_TARGET %s x=%d y=%d visible=%d" % [action, roundi(win_client.x), roundi(win_client.y), int(visible)])
