@@ -271,9 +271,11 @@ func _consume_new_events(state: Dictionary) -> void:
 			continue
 		if _cards.has(id):
 			var panel: PanelContainer = _cards[id]["panel"]
-			panel.modulate = tint
+			## self_modulate affects the panel background, not Korean text /
+			## status labels in child Controls. Keep foreground readable.
+			panel.self_modulate = Color.WHITE.lerp(tint, 0.30)
 			var tween := create_tween().bind_node(panel)
-			tween.tween_property(panel, "modulate", Color.WHITE, 0.22)
+			tween.tween_property(panel, "self_modulate", Color.WHITE, 0.22)
 	_last_event_tick = newest_tick
 	_last_event_index = newest_ordinal
 
