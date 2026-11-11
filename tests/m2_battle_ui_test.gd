@@ -53,6 +53,8 @@ func _run() -> void:
 	_check(not bool(page.get("_auto_ultimates")) and auto.text.contains("OFF"), "AUTO OFF disables ultimate auto-cast")
 	less_motion.pressed.emit()
 	_check(bool(page.get("_reduced_motion")), "reduced motion toggle works")
+	less_motion.pressed.emit()
+	_check(not bool(page.get("_reduced_motion")), "motion toggle can restore feedback")
 
 	var enemy_id: String = str(initial["enemies"][0]["id"])
 	_check(battle.add_status("enemy", enemy_id, "BURN", 60), "inject visible burn into running combat")
@@ -69,6 +71,8 @@ func _run() -> void:
 	_check(int(page.get("_last_event_tick")) == seen_tick and int(page.get("_last_event_index")) == seen_count, "re-render never duplicates an already animated event")
 	_check(int(battle.snapshot()["ticks"]) == int(snapshot_before["ticks"]) + 20, "presenter advances exact 20 logical ticks")
 	_check(str(log.text).contains("화상") or str(log.text).contains("공격") or str(log.text).contains("스킬"), "combat log reflects runtime events")
+	_check(not str(log.text).contains("CHR_") and not str(log.text).contains("ENM_"), "combat log uses localized unit names, never raw data IDs")
+	_check(enemy_card.modulate == Color.WHITE, "battle card text stays legible during hit feedback")
 	_check(int(battle.snapshot()["enemies"][0]["hp"]) < int(snapshot_before["enemies"][0]["hp"]), "battle clock advances damage/status runtime")
 	var ult_button: Button = allies.get_child(0).find_child("UltimateButton", true, false)
 	_check(ult_button != null and ult_button.disabled, "manual ultimate unavailable before full energy")
