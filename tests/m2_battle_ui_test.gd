@@ -39,7 +39,7 @@ func _run() -> void:
 	_check(str(status.text).contains("전투"), "Korean battle title present: " + str(status.text))
 	## SystemFont glyph availability is platform-specific in headless CI; rendered
 	## Hangul readability remains a physical/visual QA gate.
-	_check(page.theme.default_font != null, "Korean-capable system font configured")
+	_check(page.theme.default_font != null and page.theme.default_font.has_char(0xD55C), "Korean Hangul glyph (한) available in CI font")
 	var source: Array = Repo.load_array("res://data/characters.json")
 	_check(str(initial["allies"][0]["id"]) == str(source[0]["id"]), "player roster retains JSON IDs")
 
