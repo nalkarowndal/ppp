@@ -18,6 +18,8 @@ func _initialize() -> void:
 	_test_regen_order()
 	_test_skill_wiring()
 	_test_replay()
+	_test_dot_shield_and_victory()
+	_test_immune_skill_and_taunt_expiry()
 	_finish()
 
 func _unit(id: String, hp: int = 1000, spd: int = 1, atk: int = 1, defense: int = 0) -> Dictionary:
@@ -189,6 +191,50 @@ func _test_replay() -> void:
 	for i in range(30):
 		b.advance_frame(3)
 	_expect(first == b.snapshot(), "status ticks and skill RNG remain identical at 1x/3x")
+
+func _test_dot_shield_and_victory() -> void:
+	var skills: Array = Repo.load_array("res://data/skills.json")
+	var leon: Dictionary = _unit("LEON", 1000, 2000, 50)
+	leon["skill_ids"] = ["SKL_LEON_ACTIVE", "SKL_LEON_ULTIMATE"]
+	var b = Battle.new()
+	b.configure_skills(skills)
+	b.setup([leon], [_unit("E", 1000000)], 90)
+	var first: Dictionary = b.step_ticks(1)
+	var shield_before: int = int(first["allies"][0]["shield"])
+	_expect(shield_before == 150, "Leon creates expected 15%-HP shield")
+	_expect(b.add_status("ally", "LEON", "BURN", 20), "burn can hit shielded unit")
+	var after: Dictionary = b.step_ticks(20)
+	_expect(int(after["allies"][0]["hp"]) == 1000, "periodic burn is shielded before HP")
+	_expect(int(after["allies"][0]["shield"]) == shield_before - 20, "DOT consumes exactly effective shield amount")
+
+	var fatal = _battle(_unit("SURVIVOR", 10), _unit("VICTIM", 10))
+	_expect(fatal.add_status("enemy", "VICTIM", "BURN", 20, 1.0), "lethal burn applies")
+	var ended: Dictionary = fatal.step_ticks(100)
+	_expect(str(ended["state"]) == "victory" and int(ended["ticks"]) == 20, "lethal DOT ends battle immediately before actions")
+	_expect(_events(ended, "status_tick", "BURN").size() == 1, "lethal DOT logged exactly once")
+
+func _test_immune_skill_and_taunt_expiry() -> void:
+	var skills: Array = Repo.load_array("res://data/skills.json")
+	var enemy: Dictionary = _unit("IMMUNE_TARGET", 1000000)
+	enemy["immunities"] = ["BURN"]
+	var before: Dictionary = enemy.duplicate(true)
+	var fire = Battle.new()
+	fire.configure_skills(skills)
+	fire.setup([_fast_hero("ARIA")], [enemy], 91)
+	var result: Dictionary = fire.step_ticks(1)
+	_expect(int(result["enemies"][0]["hp"]) < 1000000, "status immunity does not cancel immediate attack damage")
+	_expect(_status(result, "enemy", "BURN").is_empty(), "BURN-immune enemy never receives status")
+	_expect(_events(result, "status_immune", "BURN").size() == 1, "skill immunity emits audit event")
+	_expect(enemy == before, "skill immunity does not mutate source data")
+
+	var bell = Battle.new()
+	bell.configure_skills(skills)
+	bell.setup([_fast_hero("BELL")], [_unit("E", 1000000)], 92)
+	var cast: Dictionary = bell.step_ticks(1)
+	_expect(not _status(cast, "ally", "TAUNT").is_empty(), "Bell creates status-linked taunt")
+	var expired: Dictionary = bell.step_ticks(60)
+	_expect(_status(expired, "ally", "TAUNT").is_empty(), "Bell taunt expires on tick61")
+	_expect(int(expired["allies"][0]["taunt_until_tick"]) == 0, "expired TAUNT clears M2-2 targeting override")
 
 func _expect(ok: bool, label: String) -> void:
 	if not ok:
