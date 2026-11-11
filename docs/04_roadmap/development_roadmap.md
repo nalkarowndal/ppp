@@ -119,3 +119,11 @@
 - 동기화된 기존 M2-3 테스트는 이제 미구현 마커가 아닌 실제 상태 적용을 검사합니다.
 - [M2-4 상세 QA](../qa/m2_4_status_effects.md).
 - 잔여: M2-5 UI/상태 아이콘·VFX/실기기 검증, 정식 상태 저항·보스·밸런스·실제 저장 연동. M1 Windows/Android ARM64 물리 QA는 아직 승인 전이며 **M2 전체 마일스톤·main 병합 보류**.
+
+## 2026-11-11 M2-5 실시간 전투 화면 기술 프리뷰
+
+- M2-4 Draft PR #15 기반 `feature/m2-5-battle-ui` 별도 브랜치. M1 UI/임시 샌드박스·저장 기능은 유지하면서 화면의 독립 실행 버튼만 추가.
+- `scenes/battle_m2_5.tscn`, `scripts/ui/battle_ui.gd`, `battle_view_model.gd`: 실제 20Hz 3v3 HP/기력/버프·디버프 표기/자동 궁극기/수동 예약/배속/재시작/되돌리기/이벤트 로그, 간단한 색 강조 구현.
+- Godot 4.7.2 SceneTree headless 실사용 신호 테스트 및 360×800 / 480×960 Linux Xvfb 실제 렌더러 PNG 자동 캡처. 기본 CI 테스트 통과와 시각 캡처는 별도의 근거로 구분; 상태이상 예시 및 스크롤 패널까지 시각 확인.
+- 실제 화면 캡처에서 Linux CJK 글리프가 없던 버그를 확인해 CI에 `fonts-noto-cjk` 설치, 한글 표시 검증. 전투 로그의 내부 ID와 카드 글씨까지 어둡게 하는 강조도 수정. [M2-5 QA](../qa/m2_5_battle_ui.md).
+- **M2-5 완료 판정 금지:** 임시 카드/무아트, 정식 애니메이션·VFX/사운드, 전투 결과·보상 및 실기기 Windows GUI/Android ARM64 터치·한글·노치/안전 영역 검수 미완료. M1 이슈 #2 및 main 병합 보류.
