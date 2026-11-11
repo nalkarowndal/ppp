@@ -199,6 +199,7 @@ func _test_dot_shield_and_victory() -> void:
 	var b = Battle.new()
 	b.configure_skills(skills)
 	b.setup([leon], [_unit("E", 1000000)], 90)
+	b.set_auto_ultimates(false)  # Isolate DOT shield absorption from Leon's auto shield ultimate.
 	var first: Dictionary = b.step_ticks(1)
 	var shield_before: int = int(first["allies"][0]["shield"])
 	_expect(shield_before == 150, "Leon creates expected 15%-HP shield")
