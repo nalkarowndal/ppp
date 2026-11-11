@@ -73,3 +73,10 @@ Godot 없이 실행할 수 있는 Windows x64 개발용 `.exe`가 GitHub Actions
 - 브랜치: `feature/m2-3-skills` (M2-2 브랜치 기반). `data/skills.json`의 액티브/궁극기 총 16개를 데이터 기반 실행 계약에 연결했습니다.
 - 자동/수동 궁극기, 20Hz 쿨다운, 기력, 즉시 피해/회복/보호막/임시 도발, 다단·연쇄·광역 공격. 실행: `godot --headless --path . --script res://tests/m2_skill_runtime_test.gd`.
 - [M2-3 상세 구현/미완료 상태](docs/qa/m2_3_skill_runtime.md). **화상·빙결·독 등 지속 상태와 완전한 스킬 시각 연출은 아직 미구현**이고, M1 실기기 QA도 보류입니다.
+
+## M2-4 고정 틱 상태이상 엔진 (실험 브랜치)
+
+- `feature/m2-4-status-effects`는 M2-3 위에 쌓인 별도 검토 브랜치입니다.
+- 전투 코어가 화상·독·빙결·감속·방어 감소/증가·재생·도발의 지속시간, 중첩, 면역, 해제, 실시간 효과를 20Hz 전투 틱으로 실행합니다.
+- `godot --headless --path . --script res://tests/m2_status_effects_test.gd`로 검증할 수 있습니다. [M2-4 상세 QA/제약](docs/qa/m2_4_status_effects.md).
+- **정식 전투 화면, 상태 아이콘·VFX, 실기기 Windows/Android 검수 및 M2 전체 완료는 여전히 미실시**입니다. M1 실기기 Gate도 미승인 상태를 유지합니다.
