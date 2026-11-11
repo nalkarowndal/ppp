@@ -20,6 +20,7 @@ var _save_label: Label
 var _qa_step_button: Button
 var _qa_reset_button: Button
 var _qa_save_button: Button
+var _qa_preview_button: Button
 var _qa_scroll: ScrollContainer
 
 func _ready() -> void:
@@ -128,6 +129,7 @@ func _build_ui() -> void:
 	preview_button.custom_minimum_size.y = 52
 	preview_button.pressed.connect(_on_battle_preview_pressed)
 	preview_section.add_child(preview_button)
+	_qa_preview_button = preview_button
 
 	var units := _section(content)
 	_text(units, "캐릭터 데이터 연결", 17, GOLD)
@@ -140,6 +142,8 @@ func _build_ui() -> void:
 	_text(footer, "전투 · 동료 · 탐험 · 거점 · 메뉴  (추후 구현)", 12, MUTED)
 
 func _on_battle_preview_pressed() -> void:
+	if OS.has_feature("debug"):
+		print("M2_5_QA_NAVIGATE ENTER")
 	get_tree().change_scene_to_file("res://scenes/battle_m2_5.tscn")
 
 func _section(parent: Node) -> VBoxContainer:
@@ -223,6 +227,16 @@ func _qa_emit_targets() -> void:
 	_qa_target("STEP", _qa_step_button)
 	_qa_target("RESET", _qa_reset_button)
 	_qa_target("SAVE", _qa_save_button)
+	_qa_emit_m2_target()
+
+## Pixel-target telemetry for ADB emulator touch; it does not inject input.
+func _qa_emit_m2_target() -> void:
+	if _qa_preview_button == null or not OS.has_feature("debug") or not is_inside_tree():
+		return
+	var center: Vector2 = _qa_preview_button.size * 0.5
+	var screen_pos: Vector2 = get_viewport().get_screen_transform() * _qa_preview_button.get_global_transform_with_canvas() * center
+	var visible: bool = _qa_scroll.get_global_rect().has_point(_qa_preview_button.get_global_rect().get_center())
+	print("M2_5_QA_TARGET ENTER x=%d y=%d visible=%d" % [roundi(screen_pos.x), roundi(screen_pos.y), int(visible)])
 
 func _qa_target(action: String, button: Button) -> void:
 	if button == null or _qa_scroll == null:
