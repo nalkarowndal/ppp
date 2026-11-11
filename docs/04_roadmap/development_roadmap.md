@@ -110,3 +110,12 @@
 - [M2-3 QA 기록](../qa/m2_3_skill_runtime.md)과 사양 참조.
 - M2-4: 지속 상태·면역·중첩·해제/재생·방어 버프. M2-5: 정식 UI/연출/인터랙션/실물 Android arm64 및 Windows 검수.
 - M1 이슈 #2와 별도 실기기 검수는 **미승인**, M2 전체 완료 및 main 병합 **보류**.
+
+## 2026-11-11 M2-4 상태이상 코어
+
+- M2-3 Draft PR #14 기반 `feature/m2-4-status-effects` 스택 브랜치.
+- `status_effects.gd` 순수 정책 모듈 및 전투 스킬 연동: 화상/독 DOT, 재생 HOT, 빙결 제어, 감속, DEF_UP/DEF_DOWN, 도발 상태화, 중첩·만료·면역·해제.
+- RED→GREEN 증거: [RED CI #42981010147](https://github.com/nalkarowndal/ppp/actions/runs/42981010147), [M2-4 강화 GREEN CI #42981725542](https://github.com/nalkarowndal/ppp/actions/runs/42981725542).
+- 동기화된 기존 M2-3 테스트는 이제 미구현 마커가 아닌 실제 상태 적용을 검사합니다.
+- [M2-4 상세 QA](../qa/m2_4_status_effects.md).
+- 잔여: M2-5 UI/상태 아이콘·VFX/실기기 검증, 정식 상태 저항·보스·밸런스·실제 저장 연동. M1 Windows/Android ARM64 물리 QA는 아직 승인 전이며 **M2 전체 마일스톤·main 병합 보류**.
