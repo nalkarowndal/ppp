@@ -9,10 +9,14 @@ mkdir -p "$OUT"
 LOG="$OUT/m2_adb_touch.log"
 full_log="$OUT/m2_logcat.txt"
 log() { echo "$*" | tee -a "$LOG"; }
+EMULATOR_GUARD_OK=0
 fail() {
   log "M2_5_ANDROID_EMULATOR_FAIL: $*"
-  adb exec-out screencap -p > "$OUT/failure.png" || true
-  adb logcat -d -v raw > "$full_log" || true
+  # Never capture another person's display or logcat on a connected phone.
+  if [[ "$EMULATOR_GUARD_OK" -eq 1 ]]; then
+    adb exec-out screencap -p > "$OUT/failure.png" || true
+    adb logcat -d -v raw > "$full_log" || true
+  fi
   exit 1
 }
 for property in ro.kernel.qemu ro.boot.qemu; do
@@ -22,6 +26,7 @@ done
 [ "$(adb shell getprop ro.kernel.qemu | tr -d '\r')" = "1" ] || fail "refusing to touch a physical Android device"
 ABI="$(adb shell getprop ro.product.cpu.abi | tr -d '\r')"
 [[ "$ABI" == *x86* ]] || fail "refusing non-x86 emulator ABI: $ABI"
+EMULATOR_GUARD_OK=1
 [ "$(adb shell pm path "$PKG" | grep -c 'package:')" -ge 1 ] || fail "test APK not installed"
 screen="$(adb shell wm size | grep -Eo '[0-9]+x[0-9]+' | head -1)"
 SCREEN_W="${screen%x*}"
