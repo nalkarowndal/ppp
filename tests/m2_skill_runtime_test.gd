@@ -22,6 +22,8 @@ func _initialize() -> void:
 	_test_manual_ultimate(skills)
 	_test_defense(skills)
 	_test_determinism(skills)
+	_test_target_limits_and_healing(skills)
+	_test_exact_cooldown_boundary(skills)
 	_finish()
 
 func _unit(id: String, role: String, hp: int, atk: int = 50, spd: int = 1) -> Dictionary:
@@ -137,6 +139,59 @@ func _test_determinism(skills: Array) -> void:
 	for i in range(20):
 		b.advance_frame(2)
 	_check(one == b.snapshot(), "skill RNG/cooldowns/replay same at 1x and 2x")
+
+func _test_target_limits_and_healing(skills: Array) -> void:
+	var serena: Dictionary = _unit("SERENA", "MAGE", 100000, 120, 2000)
+	serena["skill_ids"] = ["SKL_SERENA_ACTIVE", "SKL_SERENA_ULTIMATE"]
+	var enemies: Array = _training_enemies()
+	enemies.append(_unit("DUMMY_D", "MAGE", 1000000))
+	var b = Battle.new()
+	b.configure_skills(skills)
+	b.setup([serena], enemies, 31)
+	var state: Dictionary = b.step_ticks(1)
+	_check(_events(state, "skill_hit").size() == 3, "up-to-three active hits exactly three targets")
+	state = b.step_ticks(10)
+	_check(_events(state, "skill_hit").size() == 7, "all-enemy ultimate hits all four living enemies")
+
+	var luna: Dictionary = _unit("LUNA", "SUPPORT", 850, 92, 1000)
+	luna["skill_ids"] = ["SKL_LUNA_ACTIVE", "SKL_LUNA_ULTIMATE"]
+	var tank: Dictionary = _unit("FRONT", "TANK", 5000, 1, 1)
+	var enemy: Dictionary = _unit("TRAINING_ATTACKER", "MELEE", 1000000, 200, 2000)
+	var healer = Battle.new()
+	healer.configure_skills(skills)
+	healer.setup([tank, luna], [enemy], 37)
+	var after_first: Dictionary = healer.step_ticks(1)
+	var damaged_hp: int = int(after_first["allies"][0]["hp"])
+	var after_heal: Dictionary = healer.step_ticks(1)
+	var heal_events: Array = _events(after_heal, "heal")
+	_check(heal_events.size() == 1, "Luna actively heals injured ally")
+	if heal_events.size() == 1:
+		_check(str(heal_events[0]["target_id"]) == "FRONT" and int(heal_events[0]["amount"]) > 0, "lowest HP ratio ally receives heal")
+	_check(int(after_heal["allies"][0]["hp"]) > damaged_hp and int(after_heal["allies"][0]["hp"]) <= 5000, "heal restores actual HP without overhealing")
+
+	var bell: Dictionary = _unit("BELL", "TANK", 100000, 1, 2000)
+	bell["skill_ids"] = ["SKL_BELL_ACTIVE", "SKL_BELL_ULTIMATE"]
+	var taunter = Battle.new()
+	taunter.configure_skills(skills)
+	taunter.setup([bell], _training_enemies(), 13)
+	var taunted: Dictionary = taunter.step_ticks(1)
+	_check(int(taunted["allies"][0]["taunt_until_tick"]) == 61, "Bell active applies 60-tick taunt")
+	var casts: Array = _events(taunted, "skill_cast")
+	_check(not casts.is_empty() and str(casts[0].get("deferred_effect", "")) == "DEF_UP", "Bell DEF buff remains deferred to M2-4")
+
+func _test_exact_cooldown_boundary(skills: Array) -> void:
+	var actor: Dictionary = _unit("CD", "WARRIOR", 100000, 1, 2000)
+	actor["skill_ids"] = ["SKL_ARIA_ACTIVE", "SKL_ARIA_ULTIMATE"]
+	var battle = Battle.new()
+	battle.configure_skills(skills)
+	battle.setup([actor], _training_enemies(), 91)
+	battle.set_auto_ultimates(false)
+	var state: Dictionary = battle.step_ticks(160)
+	_check(int(state["allies"][0]["next_active_tick"]) == 161, "8s active unavailable before tick 161")
+	state = battle.step_ticks(1)
+	var cast: Array = _events(state, "skill_cast")
+	_check(cast.size() == 1 and int(cast[0]["tick"]) == 161, "active becomes available exactly on tick 161")
+	_check(int(state["allies"][0]["next_active_tick"]) == 321, "successful recast starts a new 160-tick cooldown")
 
 func _check(ok: bool, label: String) -> void:
 	if not ok:
