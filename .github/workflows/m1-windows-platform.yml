@@ -42,6 +42,7 @@ jobs:
           RunGodot "import" @("--headless", "--path", ".", "--import")
           RunGodot "smoke" @("--headless", "--path", ".", "--script", "res://tests/smoke_test.gd")
           RunGodot "ui" @("--headless", "--path", ".", "--script", "res://tests/ui_integration_test.gd")
+          RunGodot "m2_battle_ui" @("--headless", "--path", ".", "--script", "res://tests/m2_battle_ui_test.gd")
           RunGodot "pointer" @("--headless", "--path", ".", "--script", "res://tests/windows_pointer_ui_test.gd")
           RunGodot "save_write" @("--headless", "--path", ".", "--script", "res://tests/save_process_test.gd", "--", "write")
           RunGodot "save_read" @("--headless", "--path", ".", "--script", "res://tests/save_process_test.gd", "--", "read")

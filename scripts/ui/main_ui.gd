@@ -20,6 +20,7 @@ var _save_label: Label
 var _qa_step_button: Button
 var _qa_reset_button: Button
 var _qa_save_button: Button
+var _qa_preview_button: Button
 var _qa_scroll: ScrollContainer
 
 func _ready() -> void:
@@ -42,6 +43,8 @@ func _ready() -> void:
 		var qa_args := OS.get_cmdline_user_args()
 		if qa_args.size() == 2 and qa_args[0] == "--m1-windows-qa" and qa_args[1] in ["write", "read"]:
 			call_deferred("_qa_windows_run", qa_args[1])
+		elif qa_args.size() == 1 and qa_args[0] == "--m2-windows-qa":
+			call_deferred("_qa_windows_m2_run")
 
 func _setup_fonts() -> void:
 	## M1 uses platform system font; portable OFL font asset is a later export gate.
@@ -128,6 +131,7 @@ func _build_ui() -> void:
 	preview_button.custom_minimum_size.y = 52
 	preview_button.pressed.connect(_on_battle_preview_pressed)
 	preview_section.add_child(preview_button)
+	_qa_preview_button = preview_button
 
 	var units := _section(content)
 	_text(units, "캐릭터 데이터 연결", 17, GOLD)
@@ -140,6 +144,8 @@ func _build_ui() -> void:
 	_text(footer, "전투 · 동료 · 탐험 · 거점 · 메뉴  (추후 구현)", 12, MUTED)
 
 func _on_battle_preview_pressed() -> void:
+	if OS.has_feature("debug"):
+		print("M2_5_QA_NAVIGATE ENTER")
 	get_tree().change_scene_to_file("res://scenes/battle_m2_5.tscn")
 
 func _section(parent: Node) -> VBoxContainer:
@@ -199,6 +205,50 @@ func _on_save_pressed() -> void:
 	if OS.has_feature("debug"):
 		print("M1_QA_EVENT SAVE turn=%d success=%d" % [int(current.get("turn", -1)), int(ok)])
 
+## Windows exported EXE: use its embedded M2 PackedScene, not a local editor.
+## This deliberately exercises real Godot scene/buttons headlessly; it cannot
+## certify an unlocked Windows desktop or physical mouse input.
+func _qa_windows_m2_run() -> void:
+	var packed: PackedScene = load("res://scenes/battle_m2_5.tscn")
+	if packed == null:
+		_qa_windows_m2_fail("embedded battle scene not found")
+		return
+	var preview: Control = packed.instantiate()
+	get_tree().root.add_child(preview)
+	preview.set_process(false)
+	await get_tree().process_frame
+	var core = preview.get("_battle")
+	var state: Dictionary = core.snapshot()
+	if state.get("state", "") != "running" or state.get("allies", []).size() != 3 or state.get("enemies", []).size() != 3:
+		_qa_windows_m2_fail("embedded 3v3 battle did not initialize")
+		return
+	var auto: Button = preview.find_child("AutoButton", true, false)
+	var speed: Button = preview.find_child("SpeedButton", true, false)
+	var restart: Button = preview.find_child("RestartButton", true, false)
+	if auto == null or speed == null or restart == null:
+		_qa_windows_m2_fail("missing exported battle controls")
+		return
+	auto.pressed.emit()
+	speed.pressed.emit()
+	if bool(preview.get("_auto_ultimates")) or int(preview.get("_speed")) != 2:
+		_qa_windows_m2_fail("AUTO/SPEED did not change via button pressed signal")
+		return
+	preview.call("advance_ticks", 20)
+	if int(core.snapshot().get("ticks", 0)) != 20:
+		_qa_windows_m2_fail("real M2-5 combat did not advance 20 fixed ticks")
+		return
+	restart.pressed.emit()
+	if int(preview.get("_battle").snapshot().get("ticks", -1)) != 0 or int(preview.get("_speed")) != 1:
+		_qa_windows_m2_fail("restart did not reset combat and tempo")
+		return
+	preview.queue_free()
+	print("M2_5_WINDOWS_EXE_QA_PASS: embedded scene 3v3, AUTO, SPEED, fixed tick and restart")
+	get_tree().quit(0)
+
+func _qa_windows_m2_fail(reason: String) -> void:
+	push_error("M2_5_WINDOWS_EXE_QA_FAIL: " + reason)
+	get_tree().quit(1)
+
 ## Debug-export-only UI geometry and action evidence for real ADB screen touches.
 ## Uses Godot's canvas-to-physical-screen transform, not hard-coded pixel taps.
 func _qa_start() -> void:
@@ -223,6 +273,16 @@ func _qa_emit_targets() -> void:
 	_qa_target("STEP", _qa_step_button)
 	_qa_target("RESET", _qa_reset_button)
 	_qa_target("SAVE", _qa_save_button)
+	_qa_emit_m2_target()
+
+## Pixel-target telemetry for ADB emulator touch; it does not inject input.
+func _qa_emit_m2_target() -> void:
+	if _qa_preview_button == null or not OS.has_feature("debug") or not is_inside_tree():
+		return
+	var center: Vector2 = _qa_preview_button.size * 0.5
+	var screen_pos: Vector2 = get_viewport().get_screen_transform() * _qa_preview_button.get_global_transform_with_canvas() * center
+	var visible: bool = _qa_scroll.get_global_rect().has_point(_qa_preview_button.get_global_rect().get_center())
+	print("M2_5_QA_TARGET ENTER x=%d y=%d visible=%d" % [roundi(screen_pos.x), roundi(screen_pos.y), int(visible)])
 
 func _qa_target(action: String, button: Button) -> void:
 	if button == null or _qa_scroll == null:

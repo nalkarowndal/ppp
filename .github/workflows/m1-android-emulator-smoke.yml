@@ -1,7 +1,7 @@
 name: M1 Android Emulator Runtime QA
 on:
   push:
-    branches: [main]
+    branches: [main, "feature/m2-5-platform-qa"]
   pull_request:
     branches: [main]
 
@@ -133,7 +133,7 @@ jobs:
           profile: pixel_2
           emulator-boot-timeout: 420
           emulator-options: -no-window -no-audio -no-boot-anim -no-snapshot -gpu swangle_indirect
-          script: timeout 420s bash -c 'bash scripts/qa/android_emulator_smoke.sh && bash scripts/qa/android_emulator_interaction.sh'
+          script: timeout 540s bash -c 'bash scripts/qa/android_emulator_smoke.sh && bash scripts/qa/android_emulator_interaction.sh && bash scripts/qa/android_emulator_m2_battle.sh'
 
       - name: Upload emulator screenshots and runtime diagnostics
         if: always()

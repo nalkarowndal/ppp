@@ -31,11 +31,17 @@ var _combat_log: Label
 var _auto_button: Button
 var _speed_button: Button
 var _motion_button: Button
+var _qa_scroll: ScrollContainer
+var _qa_back: Button
+var _qa_restart: Button
 
 func _ready() -> void:
 	_set_korean_font()
 	_build_layout()
 	_start_battle()
+	if OS.has_feature("debug"):
+		_qa_scroll.get_v_scroll_bar().value_changed.connect(_qa_on_scroll_changed)
+		call_deferred("_qa_start")
 
 func _process(delta: float) -> void:
 	if str(_battle.snapshot().get("state", "")) != "running":
@@ -107,9 +113,11 @@ func _build_layout() -> void:
 	root_box.add_child(header)
 	var back := _button(header, "← 돌아가기", "BackButton", 48)
 	back.pressed.connect(_on_back)
+	_qa_back = back
 	_text(header, "ASTRAL CHRONICLE", 18, GOLD).size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var restart := _button(header, "재시작", "RestartButton", 48)
 	restart.pressed.connect(_on_restart)
+	_qa_restart = restart
 
 	_battle_status = _text(root_box, "전투 준비", 15, IVORY)
 	_battle_status.name = "BattleStatus"
@@ -117,6 +125,7 @@ func _build_layout() -> void:
 
 	var scroll := ScrollContainer.new()
 	scroll.name = "BattleScroll"
+	_qa_scroll = scroll
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	root_box.add_child(scroll)
@@ -279,14 +288,55 @@ func _consume_new_events(state: Dictionary) -> void:
 	_last_event_tick = newest_tick
 	_last_event_index = newest_ordinal
 
+## Real runtime pixel geometry for emulator ADB; measurement only, not synthetic input.
+func _qa_start() -> void:
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if not is_inside_tree():
+		return
+	var size: Vector2i = DisplayServer.window_get_size()
+	var area: Rect2i = DisplayServer.get_display_safe_area()
+	var cutouts: Array[Rect2] = DisplayServer.get_display_cutouts()
+	print("M2_5_QA_SCREEN width=%d height=%d" % [size.x, size.y])
+	print("M2_5_QA_SAFE_AREA x=%d y=%d width=%d height=%d cutouts=%d" % [
+		area.position.x, area.position.y, area.size.x, area.size.y, cutouts.size()
+	])
+	_qa_emit_targets()
+
+func _qa_on_scroll_changed(_value: float) -> void:
+	call_deferred("_qa_emit_targets")
+
+func _qa_emit_targets() -> void:
+	if not OS.has_feature("debug") or not is_inside_tree():
+		return
+	_qa_target("BACK", _qa_back, false)
+	_qa_target("RESTART", _qa_restart, false)
+	_qa_target("AUTO", _auto_button, true)
+	_qa_target("SPEED", _speed_button, true)
+	_qa_target("MOTION", _motion_button, true)
+
+func _qa_target(action: String, button: Button, in_scroll: bool) -> void:
+	if button == null or not is_instance_valid(button):
+		return
+	var center: Vector2 = button.size * 0.5
+	var point: Vector2 = get_viewport().get_screen_transform() * button.get_global_transform_with_canvas() * center
+	var visible: bool = button.is_visible_in_tree()
+	if in_scroll and _qa_scroll != null:
+		visible = visible and _qa_scroll.get_global_rect().has_point(button.get_global_rect().get_center())
+	print("M2_5_QA_TARGET %s x=%d y=%d visible=%d" % [action, roundi(point.x), roundi(point.y), int(visible)])
+
 func _on_auto() -> void:
 	_auto_ultimates = not _auto_ultimates
 	_battle.set_auto_ultimates(_auto_ultimates)
 	refresh_view()
+	if OS.has_feature("debug"):
+		print("M2_5_QA_ACTION AUTO enabled=%d" % int(_auto_ultimates))
 
 func _on_speed() -> void:
 	_speed = 1 if _speed == 3 else _speed + 1
 	refresh_view()
+	if OS.has_feature("debug"):
+		print("M2_5_QA_ACTION SPEED value=%d" % _speed)
 
 func _on_motion() -> void:
 	_reduced_motion = not _reduced_motion
@@ -301,8 +351,13 @@ func _on_ultimate(id: String) -> void:
 
 func _on_restart() -> void:
 	_start_battle()
+	if OS.has_feature("debug"):
+		print("M2_5_QA_ACTION RESTART ticks=%d" % int(_battle.snapshot().get("ticks", -1)))
+		call_deferred("_qa_emit_targets")
 
 func _on_back() -> void:
+	if OS.has_feature("debug"):
+		print("M2_5_QA_ACTION BACK")
 	get_tree().change_scene_to_file("res://scenes/main.tscn")
 
 func _section(parent: Node) -> VBoxContainer:

@@ -19,3 +19,5 @@ jobs:
           python -m py_compile scripts/qa/android_physical_device_qa.py
           python scripts/qa/android_physical_device_qa.py --self-test
           python -m unittest discover -s tests -p 'test_android_physical_device_qa.py' -v
+      - name: Verify M2-5 emulator guard rejects real phones without capture
+        run: python -m unittest discover -s tests -p 'test_m2_emulator_guard.py' -v

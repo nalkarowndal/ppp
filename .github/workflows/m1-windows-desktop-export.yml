@@ -162,6 +162,24 @@ jobs:
 
 
 
+      - name: M2-5 battle UI signals in the exported Windows EXE
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $exe = (Resolve-Path "desktop_build/AstralChronicle-M1-Windows-x64.exe").Path
+          $log = Join-Path (Resolve-Path "desktop_build").Path "windows-exe-m2-battle.log"
+          & $exe --headless --log-file "$log" -- --m2-windows-qa 2>&1 |
+            Tee-Object -FilePath "desktop_build/windows-exe-m2-stdout.log"
+          if ($LASTEXITCODE -ne 0) { throw "Exported EXE M2 test exited with code $LASTEXITCODE" }
+          if (-not (Test-Path -LiteralPath $log)) { throw "M2 embedded EXE log missing" }
+          if (Select-String -Path $log -Pattern 'SCRIPT ERROR','Parse Error','ERROR:','M2_5_WINDOWS_EXE_QA_FAIL') {
+            throw "M2 exported EXE emitted errors"
+          }
+          if (-not (Select-String -Path $log -SimpleMatch "M2_5_WINDOWS_EXE_QA_PASS")) {
+            throw "M2 embedded EXE did not exercise battle screen"
+          }
+          Write-Host "M2-5 WINDOWS EMBEDDED EXE QA PASS: headless real scene controls and battle, not physical GUI"
+
       - name: Upload native EXE validation log
         if: always()
         uses: actions/upload-artifact@v4
@@ -170,5 +188,6 @@ jobs:
           path: |
             desktop_build/native-exe-startup.log
             desktop_build/windows-exe-pointer-*.log
+            desktop_build/windows-exe-m2*.log
           retention-days: 14
           if-no-files-found: ignore
