@@ -30,6 +30,13 @@
 - Controls and log below fold require vertical scroll at 360×800. The footer stays visible. Check portrait safe areas, accessibility, tap targets, content scales and notch/cutout on physical ARM64 Android.
 - Godot currently uses a **SystemFont** preference list. The Linux Xvfb runner explicitly installs Noto Sans CJK; portable font bundling and cross-device Korean glyph certification remain pending. Do not treat CI font install as proof of end-device glyph availability.
 
+
+## Visual review follow-up: Korean labels and foreground contrast (2026-11-11)
+- [RED CI #42984754664](https://github.com/nalkarowndal/ppp/actions/runs/42984754664): new assertions found `CHR_ARIA`/`ENM_*` raw IDs in combat feed and hit flashes that multiplied the foreground's colors, making Hangul dim.
+- [GREEN CI #42984926363](https://github.com/nalkarowndal/ppp/actions/runs/42984926363): names are resolved from battle snapshot into Korean unit names; `PanelContainer.self_modulate` animates only the panel background while labels stay readable.
+- The generated Linux Xvfb screenshots for **360×800 initial / combat after 70 ticks / scrolled controls** and **480×960 initial** were downloaded and directly visually inspected. Korean glyphs appear normally; status examples `감속 2초` and `화상 2초` were visible, along with HP/energy changes. In the scrolled state, combat log text shows `아리아 공격 → 숲의 수호병` rather than raw IDs.
+- Remaining visual limitation: 360×800 controls and log are in a vertically scrollable region, not all above the fold. All hero/unit models are placeholders, not final art.
+
 ## Reproduction
 ```bash
 godot --headless --path . --import
