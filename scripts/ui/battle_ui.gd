@@ -116,6 +116,7 @@ func _build_layout() -> void:
 	_text(root_box, "M2-5 전투 프리뷰 · 3대3 / 적 체력 ×4 (테스트)", 12, MUTED)
 
 	var scroll := ScrollContainer.new()
+	scroll.name = "BattleScroll"
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	root_box.add_child(scroll)
