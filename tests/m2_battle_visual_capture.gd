@@ -19,11 +19,29 @@ func _capture() -> void:
 		return
 	root.size = wanted
 	DisplayServer.window_set_size(wanted)
+	var phase: String = OS.get_environment("M2_5_VISUAL_PHASE")
+	if phase.is_empty():
+		phase = "initial"
+	if not phase in ["initial", "combat", "controls"]:
+		_fail("unknown visual phase")
+		return
 	var ui: Control = BattleScene.instantiate()
 	root.add_child(ui)
 	ui.set_process(false)
 	for i in range(6):
 		await process_frame
+	if phase != "initial":
+		ui.call("advance_ticks", 70)
+		for i in range(3):
+			await process_frame
+	if phase == "controls":
+		var scroll: ScrollContainer = ui.find_child("BattleScroll", true, false)
+		if scroll == null:
+			_fail("battle scroll panel missing")
+			return
+		scroll.scroll_vertical = 10000
+		for i in range(4):
+			await process_frame
 	var image: Image = root.get_texture().get_image()
 	if image.is_empty() or image.get_width() < wanted.x or image.get_height() < wanted.y:
 		_fail("viewport screenshot is empty or incomplete")
@@ -40,11 +58,11 @@ func _capture() -> void:
 	if DirAccess.make_dir_recursive_absolute(folder) != OK:
 		_fail("could not create QA artifact directory")
 		return
-	var path: String = folder.path_join("m2_5_battle_%dx%d.png" % [wanted.x, wanted.y])
+	var path: String = folder.path_join("m2_5_battle_%dx%d_%s.png" % [wanted.x, wanted.y, phase])
 	if image.save_png(path) != OK:
 		_fail("PNG write failed")
 		return
-	print("M2-5 VISUAL CAPTURE PASS: size=%dx%d colors=%d path=%s (Xvfb only)" % [image.get_width(), image.get_height(), colors.size(), path])
+	print("M2-5 VISUAL CAPTURE PASS: size=%dx%d phase=%s colors=%d path=%s (Xvfb only)" % [image.get_width(), image.get_height(), phase, colors.size(), path])
 	ui.queue_free()
 	quit(0)
 
