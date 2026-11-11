@@ -2,7 +2,7 @@
 
 서브컬처 캐릭터 수집 × 픽셀아트 × 방치형 RPG. Godot 4 기반 게임 개발 프로젝트입니다.
 
-> 현재 상태: **M1 플랫폼 자동 검증 완료 범위는 있으나 실제 Windows/Android ARM64 기기 최종 QA 보류**. 별도 Draft PR #12에서 M2-1 자동전투 코어를 개발·검증 중입니다. 전체 게임이나 MVP가 구현된 상태가 아닙니다.
+> 현재 상태: **M1 플랫폼 자동 검증 완료 범위는 있으나 실제 Windows/Android ARM64 기기 최종 QA 보류**. 별도 Draft PR #12·#13 및 M2-3 실험 브랜치에서 전투 코어·AI·즉시 스킬 효과를 단계별 검증 중입니다. 전체 게임이나 MVP가 구현된 상태가 아닙니다.
 
 ## 시작하기
 
@@ -67,3 +67,9 @@ Godot 없이 실행할 수 있는 Windows x64 개발용 `.exe`가 GitHub Actions
 - 실행: `godot --headless --path . --script res://tests/m2_combat_core_test.gd` (해당 브랜치에서 실행).
 - [M2-1 구현 범위 및 남은 승인 조건](docs/qa/m2_1_combat_core.md) 참고. 스킬·상태이상·실제 전투 화면은 후속이며, 현재 M2 전체 마일스톤은 미완료입니다.
 - M2-2 실험 브랜치 `feature/m2-2-target-ai`: 직업별 타깃, 전·후열, 위협도·도발 정책 및 [M2-2 자동 QA](docs/qa/m2_2_target_ai.md) 추가. `tests/m2_target_ai_test.gd`를 전용 CI에서 실행하며, M2 전체 승인이나 게임 UI 통합을 의미하지 않습니다.
+
+## M2-3 스킬 실행 코어 실험 브랜치
+
+- 브랜치: `feature/m2-3-skills` (M2-2 브랜치 기반). `data/skills.json`의 액티브/궁극기 총 16개를 데이터 기반 실행 계약에 연결했습니다.
+- 자동/수동 궁극기, 20Hz 쿨다운, 기력, 즉시 피해/회복/보호막/임시 도발, 다단·연쇄·광역 공격. 실행: `godot --headless --path . --script res://tests/m2_skill_runtime_test.gd`.
+- [M2-3 상세 구현/미완료 상태](docs/qa/m2_3_skill_runtime.md). **화상·빙결·독 등 지속 상태와 완전한 스킬 시각 연출은 아직 미구현**이고, M1 실기기 QA도 보류입니다.
