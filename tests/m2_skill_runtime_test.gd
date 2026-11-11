@@ -167,7 +167,12 @@ func _test_target_limits_and_healing(skills: Array) -> void:
 	_check(heal_events.size() == 1, "Luna actively heals injured ally")
 	if heal_events.size() == 1:
 		_check(str(heal_events[0]["target_id"]) == "FRONT" and int(heal_events[0]["amount"]) > 0, "lowest HP ratio ally receives heal")
-	_check(int(after_heal["allies"][0]["hp"]) > damaged_hp and int(after_heal["allies"][0]["hp"]) <= 5000, "heal restores actual HP without overhealing")
+	var second_damage: int = 0
+	for hit in _events(after_heal, "basic_attack"):
+		if int(hit["tick"]) == 2 and str(hit["target_id"]) == "FRONT":
+			second_damage = int(hit["damage"])
+	var healed: int = int(heal_events[0]["amount"]) if heal_events.size() == 1 else 0
+	_check(int(after_heal["allies"][0]["hp"]) == damaged_hp - second_damage + healed and int(after_heal["allies"][0]["hp"]) <= 5000, "heal restores actual HP without overhealing")
 
 	var bell: Dictionary = _unit("BELL", "TANK", 100000, 1, 2000)
 	bell["skill_ids"] = ["SKL_BELL_ACTIVE", "SKL_BELL_ULTIMATE"]
