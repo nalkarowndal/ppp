@@ -88,3 +88,9 @@ Godot 없이 실행할 수 있는 Windows x64 개발용 `.exe`가 GitHub Actions
 - 실행: `godot --headless --path . --script res://tests/m2_battle_ui_test.gd`. [M2-5 QA 및 실제 Linux 렌더러 PNG 캡처 가이드](docs/qa/m2_5_battle_ui.md)를 참고하세요.
 - [Godot M2 Actions](https://github.com/nalkarowndal/ppp/actions/workflows/godot-m2-combat.yml)의 성공 실행 **Artifacts → m2-5-rendered-ui-preview**에서 360×800, 480×960 및 스크롤/전투 중 캡처를 다운로드할 수 있습니다. Linux 캡처의 한글 글리프는 Noto CJK 시스템 폰트 설치로 검증합니다. **Windows/Android 물리 기기 사진이 아닙니다**.
 - 본 프로젝트 `main` 및 과거 M1 QA 승인은 변경하지 않았고, [실기기 QA 이슈 #2](https://github.com/nalkarowndal/ppp/issues/2)와 M2 정식 출시 검토는 여전히 미완료입니다.
+
+## M2-5 Windows / Android 플랫폼 QA (별도 Draft 브랜치)
+
+- `feature/m2-5-platform-qa`: Windows 네이티브 Godot 4.7.2·내보내기 EXE 실행 테스트 및 Android 15 x86_64 **에뮬레이터 실제 ADB 터치** (전투 진입/AUTO/배속/재시작/복귀)를 M1 저장·재실행과 함께 검증.
+- [Windows/Android 플랫폼 QA 결과와 정확한 승인 경계](docs/qa/m2_5_windows_android_validation.md). x86_64 Android 에뮬레이터 터치 합격은 ARM64 실기기 터치/안전 영역 합격이 아닙니다.
+- 실제 Windows GUI 물리 마우스·DPI/캡처와 실제 Android ARM64 기기 노치/한글/저장·복원 결과는 아직 **미검증**입니다. M1 [issue #2](https://github.com/nalkarowndal/ppp/issues/2) 및 전체 출시 승인은 계속 보류합니다.
