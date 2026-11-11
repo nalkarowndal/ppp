@@ -127,3 +127,11 @@
 - Godot 4.7.2 SceneTree headless 실사용 신호 테스트 및 360×800 / 480×960 Linux Xvfb 실제 렌더러 PNG 자동 캡처. 기본 CI 테스트 통과와 시각 캡처는 별도의 근거로 구분; 상태이상 예시 및 스크롤 패널까지 시각 확인.
 - 실제 화면 캡처에서 Linux CJK 글리프가 없던 버그를 확인해 CI에 `fonts-noto-cjk` 설치, 한글 표시 검증. 전투 로그의 내부 ID와 카드 글씨까지 어둡게 하는 강조도 수정. [M2-5 QA](../qa/m2_5_battle_ui.md).
 - **M2-5 완료 판정 금지:** 임시 카드/무아트, 정식 애니메이션·VFX/사운드, 전투 결과·보상 및 실기기 Windows GUI/Android ARM64 터치·한글·노치/안전 영역 검수 미완료. M1 이슈 #2 및 main 병합 보류.
+
+## 2026-11-11 M2-5 Windows / Android 플랫폼 QA (독립 Draft 스택)
+
+- 기존 `feature/m2-5-battle-ui`를 기반으로 `feature/m2-5-platform-qa` 분리, M1·M2 정식 승인/병합 금지.
+- Windows-native M2 전투 UI 검증 및 실제 내보낸 Embedded EXE 별도 프로세스 내 M2 전투 씬/버튼/배속·20틱 시험. Windows GUI 물리 마우스와 창 캡처는 미실행.
+- Android SDK 35 **x86_64 에뮬레이터**에 debug APK 설치 후, 실제 ADB 화면 스와이프·터치로 M1 STEP/RESET/SAVE→저장 복원, M2 ENTER/AUTO/SPEED/RESTART/BACK→4개 PNG 확인.
+- [Android 에뮬레이터 QA RED #42986160971](https://github.com/nalkarowndal/ppp/actions/runs/42986160971) / [GREEN #42986860654](https://github.com/nalkarowndal/ppp/actions/runs/42986860654). Android 실물 ARM64 디바이스는 검수하지 않음.
+- [M2-5 Windows/Android 검수 보고서](../qa/m2_5_windows_android_validation.md), M1 실기기 QA 이슈 #2는 **open** 유지. 실물 Windows/Android에서 조작·노치·한글·저장·DPI 직접 확인 전 승인 금지.
