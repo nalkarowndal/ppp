@@ -24,6 +24,14 @@ jobs:
           unzip -q "$RUNNER_TEMP/godot.zip" -d "$RUNNER_TEMP"
           chmod +x "$RUNNER_TEMP/Godot_v4.7.2-stable_linux.x86_64"
           echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+      - name: Install Korean system glyphs for headless UI and Xvfb QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y fonts-noto-cjk
+          fc-cache -f
+          fc-match "Noto Sans CJK KR" | tee "$RUNNER_TEMP/font-match.log"
       - name: Import assets and parse M2 code
         shell: bash
         run: |
