@@ -38,15 +38,18 @@ static func status_text(unit: Dictionary, tick: int) -> String:
 		fragments.append("%s %d초" % [label, maxi(1, ceili(float(remaining) / 20.0))])
 	return " · ".join(fragments)
 
-static func log_text(events: Array, _state: Dictionary) -> String:
+static func log_text(events: Array, state: Dictionary) -> String:
 	if events.is_empty():
 		return "전투를 시작했습니다. 궁극기 AUTO를 변경할 수 있습니다."
+	var names: Dictionary = {}
+	for unit in state.get("allies", []) + state.get("enemies", []):
+		names[str(unit.get("id", ""))] = str(unit.get("name", "?"))
 	var lines := PackedStringArray()
 	for i in range(maxi(0, events.size() - 3), events.size()):
 		var event: Dictionary = events[i]
 		var kind: String = str(event.get("type", ""))
-		var actor: String = str(event.get("actor_id", ""))
-		var target: String = str(event.get("target_id", ""))
+		var actor: String = str(names.get(str(event.get("actor_id", "")), "환경"))
+		var target: String = str(names.get(str(event.get("target_id", "")), "대상"))
 		var tick: int = int(event.get("tick", 0))
 		var detail: String = ""
 		match kind:
