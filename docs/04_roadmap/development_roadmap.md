@@ -102,3 +102,11 @@
 - Godot 4.7.2 RED → GREEN 사례: [RED CI #42777785656](https://github.com/nalkarowndal/ppp/actions/runs/42777785656) / [GREEN CI #42777966949](https://github.com/nalkarowndal/ppp/actions/runs/42777966949).
 - 스킬/상태이상/실제 전투 시각 연출·Android 및 Windows 실기기 QA는 완료하지 않음. 따라서 **M2 전체 승인·main 병합 보류**.
 - [M2-2 QA 문서](../qa/m2_2_target_ai.md).
+
+## 2026-11-11 M2-3 스킬 코어 (독립 Draft 스택)
+
+- M2-2를 기반으로 `feature/m2-3-skills` 브랜치에서 액티브 8 + 궁극기 8종의 사용, 쿨다운, 기력, 자동/수동 사용 예약, 대상 판정 및 즉시 효과 처리.
+- M2-1/2 회귀 유지: [M2-3 GREEN CI #42980243589](https://github.com/nalkarowndal/ppp/actions/runs/42980243589).
+- [M2-3 QA 기록](../qa/m2_3_skill_runtime.md)과 사양 참조.
+- M2-4: 지속 상태·면역·중첩·해제/재생·방어 버프. M2-5: 정식 UI/연출/인터랙션/실물 Android arm64 및 Windows 검수.
+- M1 이슈 #2와 별도 실기기 검수는 **미승인**, M2 전체 완료 및 main 병합 **보류**.
