@@ -240,18 +240,22 @@ func _add_card(parent: HBoxContainer, unit: Dictionary) -> void:
 	_cards[id] = {"panel": panel, "bar": bar, "hp_label": hp_label, "energy": energy, "status": status_label, "ultimate": ultimate}
 
 func _consume_new_events(state: Dictionary) -> void:
-	var tick_seen: int = _last_event_tick
-	var events_at_tick: int = _last_event_index
+	## Ordinal starts from zero at every historical tick. Do not seed it
+	## from the last cursor: the capped event buffer contains old entries.
+	var newest_tick: int = _last_event_tick
+	var newest_ordinal: int = _last_event_index
+	var scanned_tick: int = -1
+	var ordinal: int = 0
 	for e in state.get("recent_events", []):
 		var tick: int = int(e.get("tick", -1))
-		if tick < tick_seen:
+		if tick != scanned_tick:
+			scanned_tick = tick
+			ordinal = 0
+		ordinal += 1
+		if tick < _last_event_tick or (tick == _last_event_tick and ordinal <= _last_event_index):
 			continue
-		if tick > tick_seen:
-			tick_seen = tick
-			events_at_tick = 0
-		events_at_tick += 1
-		if tick == _last_event_tick and events_at_tick <= _last_event_index:
-			continue
+		newest_tick = tick
+		newest_ordinal = ordinal
 		if _reduced_motion:
 			continue
 		var type: String = str(e.get("type", ""))
@@ -267,10 +271,10 @@ func _consume_new_events(state: Dictionary) -> void:
 		if _cards.has(id):
 			var panel: PanelContainer = _cards[id]["panel"]
 			panel.modulate = tint
-			var tween := create_tween()
+			var tween := create_tween().bind_node(panel)
 			tween.tween_property(panel, "modulate", Color.WHITE, 0.22)
-	_last_event_tick = tick_seen
-	_last_event_index = events_at_tick
+	_last_event_tick = newest_tick
+	_last_event_index = newest_ordinal
 
 func _on_auto() -> void:
 	_auto_ultimates = not _auto_ultimates
