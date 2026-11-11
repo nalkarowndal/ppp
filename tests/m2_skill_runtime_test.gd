@@ -77,7 +77,7 @@ func _test_all_sixteen(skills: Array, heroes: Array) -> void:
 		if str(hero["id"]) == "CHR_LUNA":
 			_check(_events(state, "heal").size() >= 1, "Luna heal resolves at cast")
 		if str(hero["id"]) == "CHR_ARIA":
-			_check(_events(state, "skill_cast")[0].get("deferred_effect", "") == "BURN", "burn marker explicitly deferred")
+			_check(not state["enemies"][0].get("statuses", {}).get("BURN", {}).is_empty(), "Aria BURN effect now applied by M2-4")
 
 func _test_cooldown_and_energy(skills: Array) -> void:
 	var actor: Dictionary = _unit("COOL", "WARRIOR", 100000, 25, 2000)
@@ -182,7 +182,7 @@ func _test_target_limits_and_healing(skills: Array) -> void:
 	var taunted: Dictionary = taunter.step_ticks(1)
 	_check(int(taunted["allies"][0]["taunt_until_tick"]) == 61, "Bell active applies 60-tick taunt")
 	var casts: Array = _events(taunted, "skill_cast")
-	_check(not casts.is_empty() and str(casts[0].get("deferred_effect", "")) == "DEF_UP", "Bell DEF buff remains deferred to M2-4")
+	_check(not casts.is_empty() and not taunted["allies"][0].get("statuses", {}).get("DEF_UP", {}).is_empty(), "Bell DEF_UP buff now active in M2-4")
 
 func _test_exact_cooldown_boundary(skills: Array) -> void:
 	var actor: Dictionary = _unit("CD", "WARRIOR", 100000, 1, 2000)

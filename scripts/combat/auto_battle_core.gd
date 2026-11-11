@@ -4,6 +4,7 @@ extends RefCounted
 const Damage = preload("res://scripts/combat/damage_calculator.gd")
 const TargetAI = preload("res://scripts/combat/target_selector.gd")
 const SkillTargeting = preload("res://scripts/combat/skill_targeting.gd")
+const Status = preload("res://scripts/combat/status_effects.gd")
 const TICKS_PER_SECOND: int = 20
 const ACTION_GAUGE_REQUIRED: int = 2000
 const MAX_PARTY_SIZE: int = 5
@@ -74,11 +75,14 @@ func step_ticks(count: int = 1) -> Dictionary:
 		if _state != "running":
 			break
 		_ticks += 1
+		_process_statuses()
+		if _state != "running":
+			break
 		var ready: Array = []
 		for unit in _allies + _enemies:
-			if int(unit["hp"]) <= 0:
+			if int(unit["hp"]) <= 0 or Status.frozen(unit):
 				continue
-			unit["action_gauge"] = int(unit["action_gauge"]) + int(unit["spd"])
+			unit["action_gauge"] = int(unit["action_gauge"]) + Status.gauge_gain(unit)
 			if int(unit["action_gauge"]) >= ACTION_GAUGE_REQUIRED:
 				unit["action_gauge"] = int(unit["action_gauge"]) - ACTION_GAUGE_REQUIRED
 				ready.append(unit)
@@ -141,6 +145,84 @@ func _living_unit(team: String, unit_id: String) -> Dictionary:
 			return unit
 	return {}
 
+## M2-4 status policy hooks: seconds are never used inside the simulation.
+## Returns false when there is no valid living target or immunity rejects it.
+func add_status(team: String, unit_id: String, kind: String, duration_ticks: int, potency: float = 0.0) -> bool:
+	if _state != "running":
+		return false
+	var unit: Dictionary = _living_unit(team, unit_id)
+	if unit.is_empty():
+		return false
+	return _apply_status_to_unit(unit, unit, kind, duration_ticks, potency)
+
+func remove_status(team: String, unit_id: String, selector: String = "ALL") -> int:
+	var unit: Dictionary = _living_unit(team, unit_id)
+	if unit.is_empty():
+		return 0
+	var deleted: Array = Status.remove(unit, selector)
+	for kind in deleted:
+		if str(kind) == "TAUNT":
+			unit["taunt_until_tick"] = 0
+		_record_event({"tick": _ticks, "type": "status_removed", "actor_id": unit_id, "target_id": unit_id, "status_id": str(kind)})
+	return deleted.size()
+
+func set_status_immunity(team: String, unit_id: String, kind: String, enabled: bool) -> bool:
+	if not Status.valid(kind):
+		return false
+	var unit: Dictionary = _living_unit(team, unit_id)
+	if unit.is_empty():
+		return false
+	var kinds: Array = unit.get("immunities", [])
+	if enabled and not kind in kinds:
+		kinds.append(kind)
+	elif not enabled:
+		kinds.erase(kind)
+	unit["immunities"] = kinds
+	return true
+
+func _apply_status_to_unit(actor: Dictionary, target: Dictionary, kind: String, duration_ticks: int, potency: float = 0.0) -> bool:
+	if not Status.apply(target, kind, _ticks, duration_ticks, potency):
+		if Status.valid(kind) and Status.is_immune(target, kind):
+			_record_event({"tick": _ticks, "type": "status_immune", "actor_id": str(actor["id"]), "target_id": str(target["id"]), "status_id": kind})
+		return false
+	if kind == "TAUNT":
+		apply_taunt(str(target["team"]), str(target["id"]), duration_ticks)
+	_record_event({"tick": _ticks, "type": "status_applied", "actor_id": str(actor["id"]), "target_id": str(target["id"]), "status_id": kind, "stacks": int(target["statuses"][kind]["stacks"])})
+	return true
+
+## Periodic DOT precedes HOT regardless of insertion order. A finishing DOT
+## can end a battle before any unit gains action gauge for that tick.
+func _process_statuses() -> void:
+	for unit in _allies + _enemies:
+		if _state != "running":
+			return
+		if int(unit["hp"]) <= 0:
+			continue
+		var operations: Array = Status.advance(unit, _ticks)
+		for operation in operations:
+			var kind: String = str(operation.get("status_id", ""))
+			if str(operation.get("kind", "")) == "expired":
+				if kind == "TAUNT":
+					unit["taunt_until_tick"] = 0
+				_record_event({"tick": _ticks, "type": "status_expired", "target_id": str(unit["id"]), "status_id": kind})
+				continue
+			if int(unit["hp"]) <= 0:
+				continue
+			var raw: int = int(operation.get("amount", 0))
+			var applied: int = 0
+			if bool(operation.get("heal", false)):
+				applied = mini(raw, int(unit["max_hp"]) - int(unit["hp"]))
+				unit["hp"] = int(unit["hp"]) + applied
+			else:
+				var absorbed: int = mini(int(unit["shield"]), raw)
+				unit["shield"] = int(unit["shield"]) - absorbed
+				applied = mini(int(unit["hp"]), raw - absorbed)
+				unit["hp"] = int(unit["hp"]) - applied
+			_record_event({"tick": _ticks, "type": "status_tick", "target_id": str(unit["id"]), "status_id": kind, "amount": applied, "raw": raw, "heal": bool(operation.get("heal", false))})
+			_check_result()
+			if _state != "running":
+				return
+
 func snapshot() -> Dictionary:
 	return {
 		"state": _state,
@@ -177,6 +259,8 @@ func _make_unit(source: Dictionary, team: String, slot: int) -> Dictionary:
 		"shield": 0,
 		"next_active_tick": 0,
 		"ultimate_requested": false,
+		"statuses": {},
+		"immunities": source.get("immunities", []).duplicate(true),
 		"action_gauge": 0,
 		"skill_ids": source.get("skill_ids", []).duplicate(true)
 	}
@@ -211,12 +295,7 @@ func _perform_skill(actor: Dictionary, skill: Dictionary) -> bool:
 	var effect: String = str(skill.get("effect_type", "DAMAGE"))
 	var coefficient: float = float(skill.get("coefficient", 1.0))
 	var id: String = str(skill.get("id", ""))
-	var deferred: String = ""
-	if effect in ["BURN", "POISON", "SLOW", "FREEZE_30", "DEF_DOWN", "HEAL_REGEN"]:
-		deferred = effect
-	elif effect == "TAUNT":
-		deferred = "DEF_UP"
-	_record_event({"tick": _ticks, "type": "skill_cast", "actor_id": str(actor["id"]), "skill_id": id, "category": str(skill["category"]), "deferred_effect": deferred})
+	_record_event({"tick": _ticks, "type": "skill_cast", "actor_id": str(actor["id"]), "skill_id": id, "category": str(skill["category"]), "effect_type": effect, "deferred_effect": ""})
 	if effect in ["SHIELD", "TAUNT_SHIELD"]:
 		for unit in chosen:
 			var amount: int = maxi(1, int(floor(float(actor["max_hp"]) * coefficient)))
@@ -229,8 +308,13 @@ func _perform_skill(actor: Dictionary, skill: Dictionary) -> bool:
 			unit["hp"] = int(unit["hp"]) + restored
 			_record_event({"tick": _ticks, "type": "heal", "actor_id": str(actor["id"]), "target_id": str(unit["id"]), "amount": restored, "skill_id": id})
 	if effect in ["TAUNT", "TAUNT_SHIELD"]:
-		if apply_taunt(str(actor["team"]), str(actor["id"]), 3 * TICKS_PER_SECOND):
+		if _apply_status_to_unit(actor, actor, "TAUNT", 3 * TICKS_PER_SECOND):
 			_record_event({"tick": _ticks, "type": "taunt", "actor_id": str(actor["id"]), "target_id": str(actor["id"]), "duration_ticks": 3 * TICKS_PER_SECOND, "skill_id": id})
+	if effect == "TAUNT":
+		_apply_status_to_unit(actor, actor, "DEF_UP", 4 * TICKS_PER_SECOND, coefficient)
+	if effect == "HEAL_REGEN":
+		for unit in chosen:
+			_apply_status_to_unit(actor, unit, "REGEN", 5 * TICKS_PER_SECOND)
 	if effect in ["SHIELD", "HEAL", "HEAL_REGEN", "TAUNT", "TAUNT_SHIELD"]:
 		return true
 	if effect == "MULTIHIT_3":
@@ -246,6 +330,19 @@ func _perform_skill(actor: Dictionary, skill: Dictionary) -> bool:
 			scale = [1.5, 1.1, 0.75][mini(i, 2)]
 		if int(chosen[i]["hp"]) > 0:
 			_deal_skill_damage(actor, chosen[i], scale, id)
+			if int(chosen[i]["hp"]) > 0 and _state == "running":
+				match effect:
+					"BURN":
+						_apply_status_to_unit(actor, chosen[i], "BURN", 4 * TICKS_PER_SECOND)
+					"POISON":
+						_apply_status_to_unit(actor, chosen[i], "POISON", 6 * TICKS_PER_SECOND)
+					"SLOW":
+						_apply_status_to_unit(actor, chosen[i], "SLOW", 4 * TICKS_PER_SECOND)
+					"DEF_DOWN":
+						_apply_status_to_unit(actor, chosen[i], "DEF_DOWN", 6 * TICKS_PER_SECOND)
+					"FREEZE_30":
+						if not Status.is_immune(chosen[i], "FREEZE") and _rng.randf() < 0.30:
+							_apply_status_to_unit(actor, chosen[i], "FREEZE", 2 * TICKS_PER_SECOND)
 	return true
 
 func _deal_skill_damage(actor: Dictionary, target: Dictionary, coefficient: float, skill_id: String) -> void:
@@ -253,7 +350,7 @@ func _deal_skill_damage(actor: Dictionary, target: Dictionary, coefficient: floa
 	var crit_mult: float = float(actor["crit_damage"]) if crit else 1.0
 	var variance: float = _rng.randf_range(0.95, 1.05)
 	var element: float = _element_multiplier(str(actor["element"]), str(target["element"]))
-	var raw: int = Damage.calculate(float(actor["atk"]), coefficient, float(target["def"]), element, crit_mult, variance)
+	var raw: int = Damage.calculate(float(actor["atk"]), coefficient, Status.effective_defense(target), element, crit_mult, variance)
 	var absorbed: int = mini(int(target["shield"]), raw)
 	target["shield"] = int(target["shield"]) - absorbed
 	var lost: int = mini(int(target["hp"]), raw - absorbed)
@@ -276,7 +373,7 @@ func _perform_basic_attack(actor: Dictionary) -> void:
 	var multiplier: float = float(actor["crit_damage"]) if is_critical else 1.0
 	var variance: float = _rng.randf_range(0.95, 1.05)
 	var element: float = _element_multiplier(str(actor["element"]), str(target["element"]))
-	var damage: int = Damage.calculate(float(actor["atk"]), 1.0, float(target["def"]), element, multiplier, variance)
+	var damage: int = Damage.calculate(float(actor["atk"]), 1.0, Status.effective_defense(target), element, multiplier, variance)
 	var hp_before: int = int(target["hp"])
 	var absorbed: int = mini(int(target["shield"]), damage)
 	target["shield"] = int(target["shield"]) - absorbed

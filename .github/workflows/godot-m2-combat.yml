@@ -52,6 +52,13 @@ jobs:
           Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script res://tests/m2_skill_runtime_test.gd 2>&1 | tee qa_artifacts/m2_skills.log
           grep -Fq "M2-3 SKILLS PASS:" qa_artifacts/m2_skills.log
           if grep -E 'SCRIPT ERROR|Parse Error|ERROR:' qa_artifacts/m2_skills.log; then exit 1; fi
+      - name: Run M2-4 status effects tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script res://tests/m2_status_effects_test.gd 2>&1 | tee qa_artifacts/m2_status.log
+          grep -Fq "M2-4 STATUS PASS:" qa_artifacts/m2_status.log
+          if grep -E 'SCRIPT ERROR|Parse Error|ERROR:' qa_artifacts/m2_status.log; then exit 1; fi
       - name: Upload M2 test logs
         if: always()
         uses: actions/upload-artifact@v4
