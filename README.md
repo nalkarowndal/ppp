@@ -72,7 +72,7 @@ Godot 없이 실행할 수 있는 Windows x64 개발용 `.exe`가 GitHub Actions
 
 - 브랜치: `feature/m2-3-skills` (M2-2 브랜치 기반). `data/skills.json`의 액티브/궁극기 총 16개를 데이터 기반 실행 계약에 연결했습니다.
 - 자동/수동 궁극기, 20Hz 쿨다운, 기력, 즉시 피해/회복/보호막/임시 도발, 다단·연쇄·광역 공격. 실행: `godot --headless --path . --script res://tests/m2_skill_runtime_test.gd`.
-- [M2-3 상세 구현/미완료 상태](docs/qa/m2_3_skill_runtime.md). **화상·빙결·독 등 지속 상태와 완전한 스킬 시각 연출은 아직 미구현**이고, M1 실기기 QA도 보류입니다.
+- [M2-3 상세 구현/미완료 상태](docs/qa/m2_3_skill_runtime.md). 당시 누락된 화상·빙결·독 등의 런타임 지속 상태는 후속 M2-4에서 추가되었지만, 최종 시각 연출과 실기기 QA는 여전히 보류입니다.
 
 ## M2-4 고정 틱 상태이상 엔진 (실험 브랜치)
 
@@ -80,3 +80,11 @@ Godot 없이 실행할 수 있는 Windows x64 개발용 `.exe`가 GitHub Actions
 - 전투 코어가 화상·독·빙결·감속·방어 감소/증가·재생·도발의 지속시간, 중첩, 면역, 해제, 실시간 효과를 20Hz 전투 틱으로 실행합니다.
 - `godot --headless --path . --script res://tests/m2_status_effects_test.gd`로 검증할 수 있습니다. [M2-4 상세 QA/제약](docs/qa/m2_4_status_effects.md).
 - **정식 전투 화면, 상태 아이콘·VFX, 실기기 Windows/Android 검수 및 M2 전체 완료는 여전히 미실시**입니다. M1 실기기 Gate도 미승인 상태를 유지합니다.
+
+## M2-5 실시간 전투 화면 프리뷰 (검토 브랜치)
+
+- `feature/m2-5-battle-ui`에서 M2-1~M2-4 자동전투 코어를 **실제 Godot 3대3 UI 씬**에 연결했습니다. M1 기존 화면에서 **M2-5 전투 화면 열기**를 눌러 들어가고, **← 돌아가기**로 복귀합니다.
+- HP/기력/상태이상·남은 시간, 실시간 기록, 전투 배속 1×~3×, 궁극기 자동/수동 예약, 재시작, 동작 줄이기와 간단한 카드 피격 강조를 제공합니다. **캐릭터 그래픽은 문구/카드로 대체한 플레이스홀더**이며 정식 전투 아트·VFX·음향은 아닙니다.
+- 실행: `godot --headless --path . --script res://tests/m2_battle_ui_test.gd`. [M2-5 QA 및 실제 Linux 렌더러 PNG 캡처 가이드](docs/qa/m2_5_battle_ui.md)를 참고하세요.
+- [Godot M2 Actions](https://github.com/nalkarowndal/ppp/actions/workflows/godot-m2-combat.yml)의 성공 실행 **Artifacts → m2-5-rendered-ui-preview**에서 360×800, 480×960 및 스크롤/전투 중 캡처를 다운로드할 수 있습니다. Linux 캡처의 한글 글리프는 Noto CJK 시스템 폰트 설치로 검증합니다. **Windows/Android 물리 기기 사진이 아닙니다**.
+- 본 프로젝트 `main` 및 과거 M1 QA 승인은 변경하지 않았고, [실기기 QA 이슈 #2](https://github.com/nalkarowndal/ppp/issues/2)와 M2 정식 출시 검토는 여전히 미완료입니다.

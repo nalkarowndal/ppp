@@ -24,6 +24,14 @@ jobs:
           unzip -q "$RUNNER_TEMP/godot.zip" -d "$RUNNER_TEMP"
           chmod +x "$RUNNER_TEMP/Godot_v4.7.2-stable_linux.x86_64"
           echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+      - name: Install Korean system glyphs for headless UI and Xvfb QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y fonts-noto-cjk
+          fc-cache -f
+          fc-match "Noto Sans CJK KR" | tee "$RUNNER_TEMP/font-match.log"
       - name: Import assets and parse M2 code
         shell: bash
         run: |
@@ -59,6 +67,41 @@ jobs:
           Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script res://tests/m2_status_effects_test.gd 2>&1 | tee qa_artifacts/m2_status.log
           grep -Fq "M2-4 STATUS PASS:" qa_artifacts/m2_status.log
           if grep -E 'SCRIPT ERROR|Parse Error|ERROR:' qa_artifacts/m2_status.log; then exit 1; fi
+      - name: Run M2-5 Godot battle UI integration tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script res://tests/m2_battle_ui_test.gd 2>&1 | tee qa_artifacts/m2_battle_ui.log
+          grep -Fq "M2-5 BATTLE UI PASS:" qa_artifacts/m2_battle_ui.log
+          if grep -E 'SCRIPT ERROR|Parse Error|ERROR:' qa_artifacts/m2_battle_ui.log; then exit 1; fi
+      - name: Render M2-5 portrait screenshots under Linux Xvfb
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update -qq && sudo apt-get install -y xvfb libgl1-mesa-dri
+          fi
+          for size in 360x800 480x960; do
+            phases=(initial)
+            if [ "$size" = "360x800" ]; then phases=(initial combat controls); fi
+            for phase in "${phases[@]}"; do
+              M2_5_VISUAL_SIZE="$size" M2_5_VISUAL_PHASE="$phase" LIBGL_ALWAYS_SOFTWARE=1 \
+                xvfb-run -a -s "-screen 0 1280x1920x24" \
+                Godot_v4.7.2-stable_linux.x86_64 --audio-driver Dummy --path . --script res://tests/m2_battle_visual_capture.gd 2>&1 \
+                | tee "qa_artifacts/m2_5_visual_${size}_${phase}.log"
+              grep -Fq "M2-5 VISUAL CAPTURE PASS:" "qa_artifacts/m2_5_visual_${size}_${phase}.log"
+              if grep -E 'SCRIPT ERROR|Parse Error|ERROR:' "qa_artifacts/m2_5_visual_${size}_${phase}.log"; then exit 1; fi
+              test -s "qa_artifacts/m2_5_battle_${size}_${phase}.png"
+            done
+          done
+      - name: Upload M2-5 rendered UI captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m2-5-rendered-ui-preview
+          path: qa_artifacts/m2_5_battle_*.png
+          retention-days: 14
+          if-no-files-found: ignore
       - name: Upload M2 test logs
         if: always()
         uses: actions/upload-artifact@v4

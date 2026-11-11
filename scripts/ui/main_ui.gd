@@ -117,6 +117,18 @@ func _build_ui() -> void:
 	save_section.add_child(save_button)
 	_qa_save_button = save_button
 
+	## M2-5 is an optional separate preview; the M1 QA buttons and saved
+	## debug turn are deliberately unchanged. Added AFTER SAVE to preserve
+	## existing scroll geometry used in Android/Windows QA.
+	var preview_section := _section(content)
+	_text(preview_section, "M2-5 실시간 전투 프리뷰", 16, GOLD)
+	_text(preview_section, "자동전투 · 상태이상 · 궁극기 버튼 (개발용 화면)", 12, MUTED)
+	var preview_button := Button.new()
+	preview_button.text = "M2-5 전투 화면 열기"
+	preview_button.custom_minimum_size.y = 52
+	preview_button.pressed.connect(_on_battle_preview_pressed)
+	preview_section.add_child(preview_button)
+
 	var units := _section(content)
 	_text(units, "캐릭터 데이터 연결", 17, GOLD)
 	for entry in _roster:
@@ -126,6 +138,9 @@ func _build_ui() -> void:
 
 	var footer := _section(root)
 	_text(footer, "전투 · 동료 · 탐험 · 거점 · 메뉴  (추후 구현)", 12, MUTED)
+
+func _on_battle_preview_pressed() -> void:
+	get_tree().change_scene_to_file("res://scenes/battle_m2_5.tscn")
 
 func _section(parent: Node) -> VBoxContainer:
 	var panel := PanelContainer.new()
