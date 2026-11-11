@@ -82,13 +82,17 @@ jobs:
             sudo apt-get update -qq && sudo apt-get install -y xvfb libgl1-mesa-dri
           fi
           for size in 360x800 480x960; do
-            M2_5_VISUAL_SIZE="$size" LIBGL_ALWAYS_SOFTWARE=1 \
-              xvfb-run -a -s "-screen 0 1280x1920x24" \
-              Godot_v4.7.2-stable_linux.x86_64 --audio-driver Dummy --path . --script res://tests/m2_battle_visual_capture.gd 2>&1 \
-              | tee "qa_artifacts/m2_5_visual_${size}.log"
-            grep -Fq "M2-5 VISUAL CAPTURE PASS:" "qa_artifacts/m2_5_visual_${size}.log"
-            if grep -E 'SCRIPT ERROR|Parse Error|ERROR:' "qa_artifacts/m2_5_visual_${size}.log"; then exit 1; fi
-            test -s "qa_artifacts/m2_5_battle_${size}.png"
+            phases=(initial)
+            if [ "$size" = "360x800" ]; then phases=(initial combat controls); fi
+            for phase in "${phases[@]}"; do
+              M2_5_VISUAL_SIZE="$size" M2_5_VISUAL_PHASE="$phase" LIBGL_ALWAYS_SOFTWARE=1 \
+                xvfb-run -a -s "-screen 0 1280x1920x24" \
+                Godot_v4.7.2-stable_linux.x86_64 --audio-driver Dummy --path . --script res://tests/m2_battle_visual_capture.gd 2>&1 \
+                | tee "qa_artifacts/m2_5_visual_${size}_${phase}.log"
+              grep -Fq "M2-5 VISUAL CAPTURE PASS:" "qa_artifacts/m2_5_visual_${size}_${phase}.log"
+              if grep -E 'SCRIPT ERROR|Parse Error|ERROR:' "qa_artifacts/m2_5_visual_${size}_${phase}.log"; then exit 1; fi
+              test -s "qa_artifacts/m2_5_battle_${size}_${phase}.png"
+            done
           done
       - name: Upload M2-5 rendered UI captures
         if: always()
