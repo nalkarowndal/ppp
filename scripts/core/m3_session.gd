@@ -16,7 +16,7 @@ func _notification(what: int) -> void:
 	if what in [NOTIFICATION_APPLICATION_PAUSED, NOTIFICATION_WM_CLOSE_REQUEST, NOTIFICATION_WM_GO_BACK_REQUEST]:
 		var epoch: int = int(floor(Time.get_unix_time_from_system()))
 		var operation: Dictionary = _model.call("mark_background", epoch)
-		if not bool(operation.get("ok", false)) and str(operation.get("reason", "")) != "unchanged_checkpoint":
+		if not bool(operation.get("ok", false)) and not str(operation.get("reason", "")) in ["unchanged_checkpoint", "pending_unclaimed"]:
 			print("M3_SESSION_CHECKPOINT_FAILED: " + str(operation.get("reason", "")))
 	elif what == NOTIFICATION_APPLICATION_RESUMED:
 		application_resumed.emit()

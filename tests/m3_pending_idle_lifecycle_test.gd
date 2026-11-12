@@ -40,6 +40,8 @@ func _initialize() -> void:
 	_check(not bool(controller.claim_idle(T0 + 7200)["ok"]), "no immediate repeat claim")
 	# After a successful claim in *this* session, a new background should
 	# start a fresh idle interval at the actual pause time.
+	var active_claim: Dictionary = controller.claim_idle(T0 + 10800)
+	_check(not bool(active_claim["ok"]) and active_claim["reason"] == "awaiting_background", "no passive rewards while still active after claim")
 	var fresh: Dictionary = controller.mark_background(T0 + 7260)
 	_check(bool(fresh["ok"]), "fresh checkpoint accepted after just-collected reward")
 	_check(int(controller.snapshot()["offline_checkpoint"]["last_exit_unix"]) == T0 + 7260, "post-claim actual exit timestamp")
