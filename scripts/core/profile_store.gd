@@ -297,7 +297,7 @@ static func _whole(value: Variant, minimum: int, maximum: int) -> bool:
 	return is_finite(number) and number >= float(minimum) and number <= float(maximum) and number == floor(number)
 
 static func _safe_path(path: String) -> bool:
-	return path.begins_with("user://") and path.length() > 13 and path.ends_with(".json") and not path.contains("..") and not path.contains("\\") and not path.contains(": ", 7)
+	return path.begins_with("user://") and path.length() > 13 and path.ends_with(".json") and not path.contains("..") and not path.contains("\\") and not path.substr(7).contains(":")
 
 static func _save_result(ok: bool, reason: String, profile: Dictionary) -> Dictionary:
 	return {"ok": ok, "reason": reason, "profile": profile.duplicate(true)}
