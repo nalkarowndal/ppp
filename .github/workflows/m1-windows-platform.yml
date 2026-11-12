@@ -71,6 +71,7 @@ jobs:
         run: |
           $ErrorActionPreference = "Stop"
           pwsh -NoProfile -File scripts/qa/windows_gui_interactive.ps1 -ValidateOnly
+          pwsh -NoProfile -File scripts/qa/m3_windows_physical_qa.ps1 -ValidateOnly
           if ($LASTEXITCODE -ne 0) { throw "PowerShell Windows GUI QA harness preflight failed" }
 
       - name: Upload Windows test logs
