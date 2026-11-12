@@ -258,10 +258,10 @@ static func _read_candidate(path: String, catalog: Dictionary, characters: Array
 		return {"ok": false}
 	var content: String = file.get_as_text()
 	file.close()
-	var parsed: Variant = JSON.parse_string(content)
-	if typeof(parsed) != TYPE_DICTIONARY:
+	var file_parser: JSON = JSON.new()
+	if file_parser.parse(content) != OK or typeof(file_parser.data) != TYPE_DICTIONARY:
 		return {"ok": false}
-	var env: Dictionary = parsed
+	var env: Dictionary = file_parser.data
 	if env.size() != 3 or not _whole(env.get("file_format", null), 1, 1):
 		return {"ok": false}
 	if typeof(env.get("payload_text", null)) != TYPE_STRING or typeof(env.get("sha256", null)) != TYPE_STRING:
@@ -271,9 +271,10 @@ static func _read_candidate(path: String, catalog: Dictionary, characters: Array
 		return {"ok": false}
 	if payload_text.sha256_text() != str(env["sha256"]):
 		return {"ok": false}
-	var inner: Variant = JSON.parse_string(payload_text)
-	if typeof(inner) != TYPE_DICTIONARY:
+	var payload_parser: JSON = JSON.new()
+	if payload_parser.parse(payload_text) != OK or typeof(payload_parser.data) != TYPE_DICTIONARY:
 		return {"ok": false}
+	var inner: Dictionary = payload_parser.data
 	var migrated: bool = _whole(inner.get("schema_version", null), 1, 1)
 	var profile: Dictionary = normalize_profile(inner, catalog, characters)
 	if profile.is_empty():
