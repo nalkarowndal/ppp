@@ -64,9 +64,12 @@ func _capture() -> void:
 	tab.pressed.emit()
 	for i in range(5):
 		await process_frame
+	# Godot stretch/canvas_items uses a logical Control coordinate space
+	# that can differ from physical DisplayServer pixels. Judge the actual
+	# framebuffer against wanted pixels separately below.
 	var bounds: Rect2 = ui.get_global_rect()
-	if bounds.size.x < wanted.x - 8 or bounds.size.y < wanted.y - 8:
-		_fail("screen not full-viewport")
+	if bounds.size.x < 300 or bounds.size.y < 600:
+		_fail("logical Control bounds too small")
 		return
 	for button_name in ["M3GrowthTab", "M3EquipmentTab", "M3IdleTab", "M3HeroNext"]:
 		var target: Button = ui.find_child(button_name, true, false)
