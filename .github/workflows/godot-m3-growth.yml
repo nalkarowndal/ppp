@@ -52,6 +52,13 @@ jobs:
           Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script res://tests/m3_economy_inventory_test.gd 2>&1 | tee qa_artifacts/m3_economy.log
           grep -Fq "M3-3 ECONOMY PASS:" qa_artifacts/m3_economy.log
           if grep -E 'SCRIPT ERROR|Parse Error|ERROR:' qa_artifacts/m3_economy.log; then exit 1; fi
+      - name: Run M3-4 idle reward and replay protection suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script res://tests/m3_offline_rewards_test.gd 2>&1 | tee qa_artifacts/m3_offline.log
+          grep -Fq "M3-4 IDLE PASS:" qa_artifacts/m3_offline.log
+          if grep -E 'SCRIPT ERROR|Parse Error|ERROR:' qa_artifacts/m3_offline.log; then exit 1; fi
       - name: Upload M3 growth evidence
         if: always()
         uses: actions/upload-artifact@v4
