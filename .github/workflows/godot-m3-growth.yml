@@ -89,6 +89,37 @@ jobs:
           Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script res://tests/m3_ui_integration_test.gd 2>&1 | tee qa_artifacts/m3_ui.log
           grep -Fq "M3-6 UI PASS:" qa_artifacts/m3_ui.log
           if grep -E 'SCRIPT ERROR|Parse Error|ERROR:|M3-6 UI FAIL:' qa_artifacts/m3_ui.log; then exit 1; fi
+      - name: Prepare Xvfb portrait UI renderer and Korean font
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y fonts-noto-cjk xvfb libgl1-mesa-dri
+          fc-cache -f
+          fc-match "Noto Sans CJK KR"
+      - name: Capture three M3-6 tabs at portrait resolutions
+        shell: bash
+        run: |
+          set -euo pipefail
+          for size in 360x800 480x960; do
+            for phase in growth equipment idle; do
+              M3_6_VISUAL_SIZE="$size" M3_6_VISUAL_PHASE="$phase" LIBGL_ALWAYS_SOFTWARE=1 \
+                xvfb-run -a -s "-screen 0 1280x1920x24" \
+                Godot_v4.7.2-stable_linux.x86_64 --audio-driver Dummy --path . --script res://tests/m3_ui_visual_capture.gd 2>&1 \
+                | tee "qa_artifacts/m3_6_visual_${size}_${phase}.log"
+              grep -Fq "M3-6 VISUAL CAPTURE PASS:" "qa_artifacts/m3_6_visual_${size}_${phase}.log"
+              if grep -E 'SCRIPT ERROR|Parse Error|ERROR:|M3-6 VISUAL FAIL:' "qa_artifacts/m3_6_visual_${size}_${phase}.log"; then exit 1; fi
+              test -s "qa_artifacts/m3_6_ui_${size}_${phase}.png"
+            done
+          done
+      - name: Upload M3-6 rendered UI captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m3-6-growth-equipment-idle-portraits
+          path: qa_artifacts/m3_6_ui_*.png
+          retention-days: 14
+          if-no-files-found: ignore
       - name: Upload M3 growth evidence
         if: always()
         uses: actions/upload-artifact@v4

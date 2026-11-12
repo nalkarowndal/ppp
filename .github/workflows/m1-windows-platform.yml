@@ -56,6 +56,11 @@ jobs:
               throw "$test did not print PASS"
             }
           }
+          # M3-6 native Windows: actual saved buttons and portrait screen hierarchy.
+          RunGodot "m3_6_controller" @("--headless", "--path", ".", "--script", "res://tests/m3_ui_controller_test.gd")
+          RunGodot "m3_6_ui" @("--headless", "--path", ".", "--script", "res://tests/m3_ui_integration_test.gd")
+          if (-not (Select-String -Path "qa_artifacts/m3_6_controller.log" -SimpleMatch "M3-6 CONTROLLER PASS:")) { throw "M3 controller failed" }
+          if (-not (Select-String -Path "qa_artifacts/m3_6_ui.log" -SimpleMatch "M3-6 UI PASS:")) { throw "M3 portrait UI failed" }
           RunGodot "main" @("--headless", "--path", ".", "--quit-after", "3")
           if (-not (Select-String -Path "qa_artifacts/save_read.log" -SimpleMatch "SAVE PROCESS READ PASS:")) {
             throw "Save process round-trip did not pass"
