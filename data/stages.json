@@ -6,7 +6,7 @@
     "enemy_ids": [
       "ENM_FOREST_SLIME"
     ],
-    "status": "planned_not_runtime_enabled"
+    "status": "m4_vertical_slice_enabled"
   },
   {
     "id": "STG_002",
@@ -15,7 +15,7 @@
     "enemy_ids": [
       "ENM_FOREST_ARCHER"
     ],
-    "status": "planned_not_runtime_enabled"
+    "status": "m4_vertical_slice_enabled"
   },
   {
     "id": "STG_003",
@@ -24,7 +24,7 @@
     "enemy_ids": [
       "ENM_FOREST_GUARD"
     ],
-    "status": "planned_not_runtime_enabled"
+    "status": "m4_vertical_slice_enabled"
   },
   {
     "id": "STG_004",
@@ -33,7 +33,7 @@
     "enemy_ids": [
       "ENM_FOREST_SLIME"
     ],
-    "status": "planned_not_runtime_enabled"
+    "status": "m4_vertical_slice_enabled"
   },
   {
     "id": "STG_005",
@@ -42,7 +42,7 @@
     "enemy_ids": [
       "ENM_FOREST_ARCHER"
     ],
-    "status": "planned_not_runtime_enabled"
+    "status": "m4_vertical_slice_enabled"
   },
   {
     "id": "STG_006",
@@ -51,7 +51,7 @@
     "enemy_ids": [
       "ENM_FOREST_GUARD"
     ],
-    "status": "planned_not_runtime_enabled"
+    "status": "m4_vertical_slice_enabled"
   },
   {
     "id": "STG_007",
@@ -60,7 +60,7 @@
     "enemy_ids": [
       "ENM_FOREST_SLIME"
     ],
-    "status": "planned_not_runtime_enabled"
+    "status": "m4_vertical_slice_enabled"
   },
   {
     "id": "STG_008",
@@ -69,7 +69,7 @@
     "enemy_ids": [
       "ENM_FOREST_ARCHER"
     ],
-    "status": "planned_not_runtime_enabled"
+    "status": "m4_vertical_slice_enabled"
   },
   {
     "id": "STG_009",
@@ -78,7 +78,7 @@
     "enemy_ids": [
       "ENM_FOREST_GUARD"
     ],
-    "status": "planned_not_runtime_enabled"
+    "status": "m4_vertical_slice_enabled"
   },
   {
     "id": "STG_010",
@@ -87,6 +87,6 @@
     "enemy_ids": [
       "ENM_FOREST_SLIME"
     ],
-    "status": "planned_not_runtime_enabled"
+    "status": "m4_vertical_slice_enabled"
   }
 ]
