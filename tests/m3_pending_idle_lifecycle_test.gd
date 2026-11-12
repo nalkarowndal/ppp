@@ -63,9 +63,9 @@ func _check(valid: bool, label: String) -> void:
 
 func _finish() -> void:
 	if errors.is_empty():
-		print("M3 REAL-DEVICE GATE PASS: unclaimed checkpoint survives repeated pause, reload and one-time payment")
+		print("M3 IDLE LIFECYCLE PASS: unclaimed checkpoint survives repeated pause, reload and one-time payment")
 		quit(0)
 		return
 	for label in errors:
-		push_error("M3 REAL-DEVICE GATE FAIL: " + label)
+		push_error("M3 IDLE LIFECYCLE FAIL: " + label)
 	quit(1)
