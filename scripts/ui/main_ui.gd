@@ -129,6 +129,20 @@ func _build_ui() -> void:
 	preview_button.pressed.connect(_on_battle_preview_pressed)
 	preview_section.add_child(preview_button)
 
+	## M3-6 adds a separate growth/equipment scene. Keep all M1 debug QA
+	## widgets and original scrolling/target geometry unchanged above.
+	var m3_section := _section(content)
+	_text(m3_section, "M3 성장 · 장비 · 방치 보상", 16, GOLD)
+	_text(m3_section, "캐릭터 육성 / 장비 관리 / 저장된 방치 보상", 12, MUTED)
+	var m3_button := Button.new()
+	m3_button.name = "M3OpenButton"
+	m3_button.text = "동료 성장·장비 화면 열기"
+	m3_button.custom_minimum_size.y = 52
+	m3_button.pressed.connect(func() -> void:
+		get_tree().change_scene_to_file("res://scenes/m3_progression.tscn")
+	)
+	m3_section.add_child(m3_button)
+
 	var units := _section(content)
 	_text(units, "캐릭터 데이터 연결", 17, GOLD)
 	for entry in _roster:
