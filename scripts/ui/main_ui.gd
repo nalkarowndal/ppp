@@ -143,6 +143,20 @@ func _build_ui() -> void:
 	)
 	m3_section.add_child(m3_button)
 
+	## M4 stage vertical slice is isolated below M1/M2/M3 QA widgets.
+	## Keeping the original top-screen debug touch coordinates unchanged.
+	var m4_section := _section(content)
+	_text(m4_section, "M4 첫 10스테이지 모험", 16, GOLD)
+	_text(m4_section, "자동전투 → 실제 클리어 보상 → 성장/장비 → 재접속", 12, MUTED)
+	var m4_button := Button.new()
+	m4_button.name = "M4OpenButton"
+	m4_button.text = "M4 스테이지 모험 시작"
+	m4_button.custom_minimum_size.y = 52
+	m4_button.pressed.connect(func() -> void:
+		get_tree().change_scene_to_file("res://scenes/m4_stage.tscn")
+	)
+	m4_section.add_child(m4_button)
+
 	var units := _section(content)
 	_text(units, "캐릭터 데이터 연결", 17, GOLD)
 	for entry in _roster:
