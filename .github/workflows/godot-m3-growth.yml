@@ -82,6 +82,13 @@ jobs:
           Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script res://tests/m3_ui_controller_test.gd 2>&1 | tee qa_artifacts/m3_ui_controller.log
           grep -Fq "M3-6 CONTROLLER PASS:" qa_artifacts/m3_ui_controller.log
           if grep -E 'SCRIPT ERROR|Parse Error|ERROR:|M3-6 FAIL:' qa_artifacts/m3_ui_controller.log; then exit 1; fi
+      - name: Verify M3 hardware QA blocker regression (unclaimed offline reward)
+        shell: bash
+        run: |
+          set -euo pipefail
+          Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script res://tests/m3_pending_idle_lifecycle_test.gd 2>&1 | tee qa_artifacts/m3_device_gate.log
+          grep -Fq "M3 REAL-DEVICE GATE PASS:" qa_artifacts/m3_device_gate.log
+          if grep -E 'SCRIPT ERROR|Parse Error|ERROR:|M3 REAL-DEVICE GATE FAIL:' qa_artifacts/m3_device_gate.log; then exit 1; fi
       - name: Run M3-6 portrait UI integration suite
         shell: bash
         run: |
