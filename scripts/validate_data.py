@@ -50,6 +50,9 @@ def check():
             assert key in {"hp", "atk", "def"} and type(value) in {int, float} and 0.0 <= value <= 1.0
     assert balance["party_size"] == balance["frontline"] + balance["backline"] == 5
     assert balance["maximum_level"] == 100
+    assert balance["maximum_idle_hours"] == 8, "M3-4 requires an eight-hour cap"
+    assert balance["offline_efficiency"] == 0.8, "M3-4 requires the 80% idle efficiency"
+    assert int(8 * 240 * 0.8) == 1536 and int(8 * 200 * 0.8) == 1280
     assert 0.0 < balance["offline_efficiency"] <= 1.0
     assert 100 + 16 * 99 + 4 * 99 * 99 == 40888
     assert 60 + 10 * 99 + 2 * 99 * 99 == 20652
