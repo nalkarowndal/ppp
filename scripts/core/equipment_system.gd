@@ -159,7 +159,9 @@ static func _valid_template(entry: Dictionary) -> bool:
 	var flat: Dictionary = entry["flat_stats"]
 	var percent: Dictionary = entry["percent_stats"]
 	for key in flat:
-		if not key in STAT_KEYS or typeof(flat[key]) != TYPE_INT or int(flat[key]) < 0:
+		if not key in STAT_KEYS or not typeof(flat[key]) in [TYPE_INT, TYPE_FLOAT]:
+			return false
+		if not is_finite(float(flat[key])) or float(flat[key]) < 0.0 or float(flat[key]) > 1000000.0 or not is_equal_approx(float(flat[key]), float(int(flat[key]))):
 			return false
 	for key in percent:
 		if not key in STAT_KEYS:

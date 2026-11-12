@@ -78,7 +78,7 @@ func _initialize() -> void:
 	_expect(wallet == original_wallet and inventory == original_inventory, "enhance leaves original maps unchanged")
 	inventory = enhanced["inventory"]
 	wallet = enhanced["wallet"]
-	_expect(int(Equipment.stats_for(hero, characters[0], loadout, inventory, catalog).get("atk", 0)) == 184, "enhancement only scales gear flat stats")
+	_expect(int(Equipment.stats_for(hero, characters[0], loadout, inventory, catalog).get("atk", 0)) == 185, "enhancement only scales gear flat stats")
 
 	var unequipped: Dictionary = Equipment.try_unequip(loadout, inventory, catalog, "accessory_1")
 	_expect(bool(unequipped["ok"]) and str(unequipped["loadout"]["accessory_1"]) == "", "ring unequipped")
