@@ -19,6 +19,7 @@ def check():
     enemies = read("enemies.json")
     stages = read("stages.json")
     balance = read("balance_config.json")
+    equipment = read("equipment.json")
     assert len(chars) == 8, "MVP roster should contain 8 planned characters"
     assert len(skills) == 16, "8 active + 8 ultimate skill definitions required"
     assert len(stages) == 10, "M4 vertical slice should list 10 planned stages"
@@ -36,6 +37,17 @@ def check():
         assert set(char["skill_ids"]).issubset(skill_ids)
     for stage in stages:
         assert set(stage["enemy_ids"]).issubset(enemy_ids)
+    assert len(equipment) >= 6, "M3-2 equipment catalog requires six prototype templates"
+    item_ids = [entry["id"] for entry in equipment]
+    assert len(item_ids) == len(set(item_ids)), "duplicate equipment template ID"
+    for item in equipment:
+        assert isinstance(item["id"], str) and item["id"].startswith("EQ_")
+        assert item["slot"] in {"WEAPON", "ARMOR", "ACCESSORY"}
+        assert item["rarity"] in {"COMMON", "RARE", "EPIC"}
+        for key, value in item["flat_stats"].items():
+            assert key in {"hp", "atk", "def"} and type(value) is int and value >= 0
+        for key, value in item["percent_stats"].items():
+            assert key in {"hp", "atk", "def"} and type(value) in {int, float} and 0.0 <= value <= 1.0
     assert balance["party_size"] == balance["frontline"] + balance["backline"] == 5
     assert balance["maximum_level"] == 100
     assert 0.0 < balance["offline_efficiency"] <= 1.0

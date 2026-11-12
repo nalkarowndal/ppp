@@ -1,0 +1,70 @@
+[
+  {
+    "id": "EQ_TRAINING_BLADE",
+    "name": "훈련용 검",
+    "rarity": "COMMON",
+    "slot": "WEAPON",
+    "flat_stats": {
+      "atk": 20
+    },
+    "percent_stats": {}
+  },
+  {
+    "id": "EQ_RANGER_BOW",
+    "name": "별빛 활",
+    "rarity": "RARE",
+    "slot": "WEAPON",
+    "flat_stats": {
+      "atk": 30
+    },
+    "percent_stats": {
+      "atk": 0.02
+    }
+  },
+  {
+    "id": "EQ_GUARD_PLATE",
+    "name": "수비대 흉갑",
+    "rarity": "COMMON",
+    "slot": "ARMOR",
+    "flat_stats": {
+      "hp": 140,
+      "def": 12
+    },
+    "percent_stats": {}
+  },
+  {
+    "id": "EQ_BULWARK_ARMOR",
+    "name": "성벽 갑옷",
+    "rarity": "RARE",
+    "slot": "ARMOR",
+    "flat_stats": {
+      "hp": 160,
+      "def": 25
+    },
+    "percent_stats": {}
+  },
+  {
+    "id": "EQ_SILVER_RING",
+    "name": "은빛 반지",
+    "rarity": "COMMON",
+    "slot": "ACCESSORY",
+    "flat_stats": {
+      "atk": 5
+    },
+    "percent_stats": {
+      "atk": 0.05
+    }
+  },
+  {
+    "id": "EQ_MOON_CHARM",
+    "name": "달빛 호부",
+    "rarity": "EPIC",
+    "slot": "ACCESSORY",
+    "flat_stats": {
+      "hp": 60
+    },
+    "percent_stats": {
+      "hp": 0.04
+    }
+  }
+]
