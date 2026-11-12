@@ -4,6 +4,7 @@ const Repo = preload("res://scripts/core/data_repository.gd")
 const Gear = preload("res://scripts/core/equipment_system.gd")
 const Store = preload("res://scripts/core/profile_store.gd")
 const Stage = preload("res://scripts/core/m4_stage_run.gd")
+const M3Model = preload("res://scripts/ui/m3_progression_controller.gd")
 const PATH: String = "user://qa_m4/stage_profile.json"
 var failures: Array[String] = []
 
@@ -51,6 +52,54 @@ func _initialize() -> void:
 		_assert(persisted["profile"]["economy_state"]["inventory"].size() == 1, "replay does not mint first-clear gear")
 		_assert(persisted["profile"]["economy_state"]["seen_events"].size() == 2, "both victories have unique receipts")
 	_assert(not bool(reloaded.start_stage(10, heroes).get("ok", false)), "stage ten cannot be skipped")
+	## From the actual stage-one reward, pay for a character level and equip
+	## the first-clear blade via the existing M3 saved-growth controller.
+	var growth = M3Model.new()
+	_assert(bool(growth.initialize(PATH).get("ok", false)), "M3 progression reloads earned stage rewards")
+	_assert(bool(growth.select_hero("CHR_ARIA").get("ok", false)), "choose stage-one participant for growth")
+	_assert(bool(growth.level_selected().get("ok", false)), "stage rewards fund real level-up")
+	_assert(bool(growth.equip_item("itm_00000001", "weapon").get("ok", false)), "first-clear blade can be equipped")
+	_assert(int(growth.snapshot()["heroes"]["CHR_ARIA"]["level"]) == 2, "earned XP converted into level two")
+	var campaign = Stage.new()
+	_assert(bool(campaign.initialize(PATH).get("ok", false)), "campaign resumes after growth transactions")
+	_assert(bool(campaign.start_stage(2, heroes).get("ok", false)), "second stage starts after growth/equip")
+	var battle_before: Dictionary = campaign.battle_snapshot()
+	_assert(int(battle_before["allies"][0]["atk"]) > 135, "M4 battle consumes persisted M3 gear and growth stats")
+	for number in range(2, 11):
+		if number != 2:
+			_assert(bool(campaign.start_stage(number, heroes).get("ok", false)), "campaign unlocks and enters stage %d" % number)
+		_assert(_win(campaign), "campaign actually wins stage %d" % number)
+		var completed: Dictionary = campaign.settle_victory()
+		_assert(bool(completed.get("ok", false)), "stage %d reward persists" % number)
+		_assert(bool(completed.get("first_clear", false)), "stage %d is true first clear" % number)
+		if not bool(completed.get("ok", false)):
+			break
+	var finished: Dictionary = Store.load_profile(PATH, catalog, chars)
+	_assert(bool(finished.get("ok", false)), "campaign final profile passes M3 integrity checks")
+	if bool(finished.get("ok", false)):
+		var profile: Dictionary = finished["profile"]
+		_assert(int(profile["highest_cleared_stage"]) == 10, "stage ten is persisted as highest clear")
+		_assert(profile["economy_state"]["seen_events"].has("stage:clear:010"), "stage-ten receipt survived")
+		_assert(profile["economy_state"]["inventory"].size() == 5, "five distinct first-clear gear templates issued once")
+		_assert(int(profile["heroes"]["CHR_ARIA"]["level"]) == 2, "leveling survives the entire campaign")
+	var restored = Stage.new()
+	_assert(bool(restored.initialize(PATH).get("ok", false)), "completed campaign reopens successfully")
+	_assert(bool(restored.start_stage(10, heroes).get("ok", false)), "stage ten is replayable after process-style reload")
+	## Two battles can start at one version; only one may save at that
+	## revision. Rejection cannot corrupt or re-grant the first result.
+	var concurrent_a = Stage.new()
+	var concurrent_b = Stage.new()
+	_assert(bool(concurrent_a.initialize(PATH).get("ok", false)), "first concurrent M4 session loads")
+	_assert(bool(concurrent_b.initialize(PATH).get("ok", false)), "second concurrent M4 session loads")
+	_assert(bool(concurrent_a.start_stage(1, heroes).get("ok", false)), "first concurrent battle starts")
+	_assert(bool(concurrent_b.start_stage(1, heroes).get("ok", false)), "second concurrent battle starts")
+	_assert(_win(concurrent_a) and _win(concurrent_b), "both competing sessions reach real victories")
+	_assert(bool(concurrent_a.settle_victory().get("ok", false)), "first concurrent settlement saves")
+	var ledger_after: Dictionary = Store.load_profile(PATH, catalog, chars)
+	var stale: Dictionary = concurrent_b.settle_victory()
+	_assert(not bool(stale.get("ok", false)) and str(stale.get("reason", "")) == "stale_revision", "second concurrent payout rejected by CAS")
+	var ledger_after_stale: Dictionary = Store.load_profile(PATH, catalog, chars)
+	_assert(ledger_after_stale.get("profile", {}) == ledger_after.get("profile", {}), "rejected stale settlement is nonmutating")
 	_finish()
 
 func _win(runner: RefCounted) -> bool:
