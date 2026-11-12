@@ -1,0 +1,47 @@
+name: Godot M3 Growth
+on:
+  push:
+    branches: ["feature/**"]
+  pull_request:
+    branches: [main, "feature/m2-5-battle-ui"]
+
+permissions:
+  contents: read
+
+jobs:
+  m3-growth:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install official Godot 4.7.2 editor
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 --retry-delay 3 \
+            "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip" \
+            --output "$RUNNER_TEMP/godot.zip"
+          unzip -q "$RUNNER_TEMP/godot.zip" -d "$RUNNER_TEMP"
+          chmod +x "$RUNNER_TEMP/Godot_v4.7.2-stable_linux.x86_64"
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+      - name: Import Godot project
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p qa_artifacts
+          Godot_v4.7.2-stable_linux.x86_64 --headless --path . --import 2>&1 | tee qa_artifacts/import.log
+          if grep -E 'SCRIPT ERROR|Parse Error|ERROR:' qa_artifacts/import.log; then exit 1; fi
+      - name: Run M3-1 growth transaction suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script res://tests/m3_growth_test.gd 2>&1 | tee qa_artifacts/m3_growth.log
+          grep -Fq "M3-1 GROWTH PASS:" qa_artifacts/m3_growth.log
+          if grep -E 'SCRIPT ERROR|Parse Error|ERROR:' qa_artifacts/m3_growth.log; then exit 1; fi
+      - name: Upload M3 growth evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m3-1-growth-logs
+          path: qa_artifacts/
+          if-no-files-found: ignore
