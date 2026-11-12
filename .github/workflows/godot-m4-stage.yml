@@ -1,0 +1,41 @@
+name: Godot M4 Stage Loop
+on:
+  push:
+    branches: ["feature/m4*"]
+  pull_request:
+    branches: ["feature/m3-physical-qa-readiness"]
+
+permissions:
+  contents: read
+
+jobs:
+  m4-stage-loop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Godot 4.7.2
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 --retry-delay 3             "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip" -o "$RUNNER_TEMP/godot.zip"
+          unzip -q "$RUNNER_TEMP/godot.zip" -d "$RUNNER_TEMP"
+          chmod +x "$RUNNER_TEMP/Godot_v4.7.2-stable_linux.x86_64"
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+      - name: Import and parse all scripts
+        run: |
+          set -euo pipefail
+          mkdir -p qa_artifacts
+          Godot_v4.7.2-stable_linux.x86_64 --headless --path . --import 2>&1 | tee qa_artifacts/m4_import.log
+          if grep -E 'SCRIPT ERROR|Parse Error|ERROR:' qa_artifacts/m4_import.log; then exit 1; fi
+      - name: Verify real battle to durable reward and replay
+        run: |
+          set -euo pipefail
+          Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script res://tests/m4_stage_loop_test.gd 2>&1 | tee qa_artifacts/m4_stage_loop.log
+          grep -Fq 'M4 STAGE LOOP PASS:' qa_artifacts/m4_stage_loop.log
+          if grep -E 'SCRIPT ERROR|Parse Error|ERROR:|M4 FAIL:' qa_artifacts/m4_stage_loop.log; then exit 1; fi
+      - name: Upload M4 diagnostic logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: astral-m4-stage-loop-logs
+          path: qa_artifacts/
