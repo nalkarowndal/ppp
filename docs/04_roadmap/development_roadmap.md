@@ -10,7 +10,7 @@
 | M1 | 씬·로더·저장·임시 UI 기초 | 임시 씬·로더·UI·저장 구현, Linux CI와 360×800/900 렌더 검증 통과; Android 수동 QA 미통과(승인 보류) |
 | M2 | 3인+보스 전투 코어·상태이상·자동 AI | M2-1 Draft PR #12, 별도 M2-2 직업/열/위협도·도발 정책 브랜치에서 Godot CI 검증; M2-3~5 미구현, M1 실기기 QA 보류 |
 | M3 | 1~100 레벨·승급·장비·재화·8h 방치 | M3-1~5 로직·저장 및 M3-6 성장/장비/방치 UI Draft 구현; 물리 Windows GUI·Android ARM64 실기기 QA 및 최종 PR 병합 보류 |
-| M4 | 10스테이지 수직슬라이스·보상·진행 저장 | 미시작 |
+| M4 | 10스테이지 수직슬라이스·보상·진행 저장 | feature/m4-stage-reward-vertical-slice Draft: M2 실제 전투↔M3 보상/성장/장비/저장/재접속 연동, Godot 자동 QA 수행; 물리 실기기·리뷰 승인 보류 |
 | M5 | 12개 UI 화면·공통 Theme·반응형 | 미시작; 임시 UI만 존재 |
 | M6 | 8 캐릭터·40 스테이지·보스2·던전2·거점1 | 미시작 |
 | M7 | 픽셀아트·VFX·일러스트·BGM·SFX | 미시작 |
@@ -182,3 +182,12 @@
 - Superdesign CLI preflight 시간 초과로 실제 캔버스 시안 없음. 기존 UI 브랜드를 그대로 사용.
 - 실제 Windows GUI 마우스 조작/Android ARM64 터치·safe area·한글·종료 후 재실행 검수 (이슈 #2), M4 실제 전투 보상 연동, M5 전체 UI 통합 및 M7 아트 보완 대기.
 - M3 전체 승인·main 병합 보류.
+
+## 2026-11-12 M4 첫 10스테이지 수직슬라이스 (Draft)
+
+- M3 QA Draft PR #24 위에서 `feature/m4-stage-reward-vertical-slice` 분기. **main 병합 및 M3/M4 최종 승인 금지.**
+- Godot 기존 M2 20Hz 전투 및 M3 캐릭터 레벨/장비/경제 원장/프로필 저장을 사용해 스테이지 1~10 진입, 진짜 승리 시 보상, 최초 클리어 장비, 재도전, 저장·재접속을 연결.
+- Stage #1만 최초 해제. #N 전투 승리의 영구 `stage:clear:NNN` 영수증이 있어야 #N+1로 진입 가능. 동일 전투 중복 수령 불가, 프로필 revision CAS로 오래된 세션 지급 차단.
+- 독립 `scenes/m4_stage.tscn`: 기존 M1 개발용 버튼 좌표 유지, 10스테이지 선택/실시간 HP·배속/보상/성장 화면 이동, 세로 safe area와 한글 폰트 fallback.
+- [M4 QA 및 승인 대기 기록](../qa/m4_stage_vertical_slice.md). 서버 권위, 본편 아트/보스·던전, Windows 실제 GUI와 Android ARM64 물리기기 터치/저장/노치/한글 검수는 미완료.
+- M3 방치 보상의 foreground 시간 과다 계산 [이슈 #25](https://github.com/nalkarowndal/ppp/issues/25), 하드웨어 [이슈 #2](https://github.com/nalkarowndal/ppp/issues/2)는 여전히 차단 사항이며 이 작업에서 폐쇄하지 않음.
