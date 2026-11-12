@@ -45,6 +45,9 @@ func _ready() -> void:
 	_build()
 	var result: Dictionary = _model.initialize(save_path)
 	_ready_ok = bool(result.get("ok", false))
+	if _ready_ok:
+		M3Session.attach(_model)
+		M3Session.application_resumed.connect(_on_session_resumed)
 	if not _ready_ok:
 		_status_label.text = "저장 데이터를 열 수 없습니다: " + str(result.get("reason", "unknown"))
 		_level_button.disabled = true
@@ -58,21 +61,14 @@ func _ready() -> void:
 	get_viewport().size_changed.connect(_apply_safe_area)
 	print("M3_UI_READY: growth/equipment/idle scene initialized, storage_ok=%d" % int(_ready_ok))
 
-func _notification(what: int) -> void:
+func _on_session_resumed() -> void:
 	if not _ready_ok:
 		return
-	# Mobile OS may terminate the process from background. Persist before
-	# suspension; do not use focus-out (which also fires for dialogs).
-	if what in [NOTIFICATION_APPLICATION_PAUSED, NOTIFICATION_WM_CLOSE_REQUEST, NOTIFICATION_WM_GO_BACK_REQUEST]:
-		var checkpoint: Dictionary = _model.mark_background(_now_unix())
-		if not bool(checkpoint.get("ok", false)) and str(checkpoint.get("reason", "")) != "unchanged_checkpoint":
-			print("M3_UI_PAUSE_SAVE_FAILED: " + str(checkpoint.get("reason", "")))
-	elif what == NOTIFICATION_APPLICATION_RESUMED:
-		_refresh_all()
-		var preview: Dictionary = _model.preview_idle(_now_unix())
-		if bool(preview.get("ok", false)) and int(preview["rewards"].get("gold", 0)) > 0:
-			_idle_dialog.dialog_text = "방치 보상이 준비됐습니다.\n골드 %d  ·  경험치 결정 %d\n수령하시겠습니까?" % [int(preview["rewards"]["gold"]), int(preview["rewards"]["xp_crystals"])]
-			_idle_dialog.popup_centered(Vector2i(320, 170))
+	_refresh_all()
+	var preview: Dictionary = _model.preview_idle(_now_unix())
+	if bool(preview.get("ok", false)) and int(preview["rewards"].get("gold", 0)) > 0:
+		_idle_dialog.dialog_text = "방치 보상이 준비됐습니다.\n골드 %d  ·  경험치 결정 %d\n수령하시겠습니까?" % [int(preview["rewards"]["gold"]), int(preview["rewards"]["xp_crystals"])]
+		_idle_dialog.popup_centered(Vector2i(320, 170))
 
 func _now_unix() -> int:
 	return int(floor(Time.get_unix_time_from_system()))
