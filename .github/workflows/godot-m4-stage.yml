@@ -33,6 +33,12 @@ jobs:
           Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script res://tests/m4_stage_loop_test.gd 2>&1 | tee qa_artifacts/m4_stage_loop.log
           grep -Fq 'M4 STAGE LOOP PASS:' qa_artifacts/m4_stage_loop.log
           if grep -E 'SCRIPT ERROR|Parse Error|ERROR:|M4 FAIL:' qa_artifacts/m4_stage_loop.log; then exit 1; fi
+      - name: Verify portrait stage selection and actual paid victory
+        run: |
+          set -euo pipefail
+          Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script res://tests/m4_stage_ui_test.gd 2>&1 | tee qa_artifacts/m4_ui.log
+          grep -Fq 'M4 UI PASS:' qa_artifacts/m4_ui.log
+          if grep -E 'SCRIPT ERROR|Parse Error|ERROR:|M4 UI FAIL:' qa_artifacts/m4_ui.log; then exit 1; fi
       - name: Upload M4 diagnostic logs
         if: always()
         uses: actions/upload-artifact@v4
