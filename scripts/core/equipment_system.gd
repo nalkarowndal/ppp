@@ -196,6 +196,10 @@ static func _valid_item(instance_id: String, item: Dictionary, catalog: Dictiona
 		return slot.is_empty()
 	return not owner.strip_edges().is_empty() and slot in SLOTS and str(SLOT_KIND[slot]) == str(entry["slot"])
 
+## Public validation for the M3-3 receipt ledger and M3-5 save boundary.
+static func validate_inventory(inventory: Dictionary, catalog: Dictionary) -> bool:
+	return _valid_inventory(inventory, catalog)
+
 static func _valid_inventory(inventory: Dictionary, catalog: Dictionary) -> bool:
 	if catalog.is_empty():
 		return false
