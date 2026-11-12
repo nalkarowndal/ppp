@@ -39,6 +39,23 @@ jobs:
           Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script res://tests/m4_stage_ui_test.gd 2>&1 | tee qa_artifacts/m4_ui.log
           grep -Fq 'M4 UI PASS:' qa_artifacts/m4_ui.log
           if grep -E 'SCRIPT ERROR|Parse Error|ERROR:|M4 UI FAIL:' qa_artifacts/m4_ui.log; then exit 1; fi
+      - name: Install Korean font and virtual display for M4 render QA
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y fonts-noto-cjk xvfb libgl1-mesa-dri
+      - name: Capture M4 stage portraits with the real Godot renderer
+        run: |
+          set -euo pipefail
+          for size in 360x800 480x960; do
+            M4_VISUAL_SIZE="$size" LIBGL_ALWAYS_SOFTWARE=1 \
+              xvfb-run -a -s "-screen 0 1280x1920x24" \
+              timeout 90s Godot_v4.7.2-stable_linux.x86_64 --audio-driver Dummy --path . --quit-after 180 --script res://tests/m4_stage_visual_capture.gd 2>&1 \
+              | tee "qa_artifacts/m4_visual_${size}.log"
+            grep -Fq 'M4 VISUAL PASS:' "qa_artifacts/m4_visual_${size}.log"
+            if grep -E 'SCRIPT ERROR|Parse Error|ERROR:|M4 VISUAL FAIL:' "qa_artifacts/m4_visual_${size}.log"; then exit 1; fi
+            test -s "qa_artifacts/m4_stage_portrait_${size}.png"
+          done
       - name: Upload M4 diagnostic logs
         if: always()
         uses: actions/upload-artifact@v4
