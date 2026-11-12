@@ -59,6 +59,22 @@ jobs:
           Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script res://tests/m3_offline_rewards_test.gd 2>&1 | tee qa_artifacts/m3_offline.log
           grep -Fq "M3-4 IDLE PASS:" qa_artifacts/m3_offline.log
           if grep -E 'SCRIPT ERROR|Parse Error|ERROR:' qa_artifacts/m3_offline.log; then exit 1; fi
+      - name: Run M3-5 disk-save backup, migration, and ledger integration tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script res://tests/m3_profile_save_test.gd 2>&1 | tee qa_artifacts/m3_save.log
+          grep -Fq "M3-5 SAVE PASS:" qa_artifacts/m3_save.log
+          if grep -E 'SCRIPT ERROR|Parse Error|ERROR:|M3-5 FAIL:' qa_artifacts/m3_save.log; then exit 1; fi
+      - name: Run M3-5 save in three separate Godot processes
+        shell: bash
+        run: |
+          set -euo pipefail
+          for phase in write read verify; do
+            Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script res://tests/m3_save_process_test.gd -- "$phase" 2>&1 | tee "qa_artifacts/m3_save_process_${phase}.log"
+            grep -Fq "M3-5 PROCESS ${phase^^} PASS:" "qa_artifacts/m3_save_process_${phase}.log"
+            if grep -E 'SCRIPT ERROR|Parse Error|ERROR:|M3-5 PROCESS FAIL:' "qa_artifacts/m3_save_process_${phase}.log"; then exit 1; fi
+          done
       - name: Upload M3 growth evidence
         if: always()
         uses: actions/upload-artifact@v4
