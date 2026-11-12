@@ -102,7 +102,9 @@ func _capture() -> void:
 	# Release global lifecycle model before the Xvfb screenshot process ends.
 	# Production M3Session remains attached across in-game scene navigation;
 	# this cleanup is strictly for an isolated one-shot QA process.
-	M3Session.attach(null)
+	var session_node: Node = root.get_node_or_null("M3Session")
+	if session_node != null:
+		session_node.call("attach", null)
 	ui.queue_free()
 	quit(0)
 

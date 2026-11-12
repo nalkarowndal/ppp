@@ -46,8 +46,12 @@ func _ready() -> void:
 	var result: Dictionary = _model.initialize(save_path)
 	_ready_ok = bool(result.get("ok", false))
 	if _ready_ok:
-		M3Session.attach(_model)
-		M3Session.application_resumed.connect(_on_session_resumed)
+		# In the actual exported game, the project Autoload exists. Standalone
+		# --script Godot integration tests do not instantiate project Autoloads.
+		var session_node: Node = get_tree().root.get_node_or_null("M3Session")
+		if session_node != null:
+			session_node.call("attach", _model)
+			session_node.connect("application_resumed", Callable(self, "_on_session_resumed"))
 	if not _ready_ok:
 		_status_label.text = "저장 데이터를 열 수 없습니다: " + str(result.get("reason", "unknown"))
 		_level_button.disabled = true
