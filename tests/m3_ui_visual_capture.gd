@@ -99,6 +99,10 @@ func _capture() -> void:
 		_fail("PNG save failed")
 		return
 	print("M3-6 VISUAL CAPTURE PASS: %dx%d %s colors=%d file=%s (Xvfb, not physical device)" % [wanted.x, wanted.y, phase, colors.size(), output])
+	# Release global lifecycle model before the Xvfb screenshot process ends.
+	# Production M3Session remains attached across in-game scene navigation;
+	# this cleanup is strictly for an isolated one-shot QA process.
+	M3Session.attach(null)
 	ui.queue_free()
 	quit(0)
 
