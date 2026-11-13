@@ -23,6 +23,9 @@ var _qa_save_button: Button
 var _qa_scroll: ScrollContainer
 
 func _ready() -> void:
+	var session: Node = get_tree().root.get_node_or_null("M3Session")
+	if session != null:
+		session.call("start")
 	_setup_fonts()
 	_roster = Repo.load_array("res://data/characters.json")
 	_enemies = Repo.load_array("res://data/enemies.json")
