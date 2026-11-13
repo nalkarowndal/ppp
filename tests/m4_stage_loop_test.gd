@@ -93,6 +93,8 @@ func _initialize() -> void:
 	_assert(bool(concurrent_b.initialize(PATH).get("ok", false)), "second concurrent M4 session loads")
 	_assert(bool(concurrent_a.start_stage(1, heroes).get("ok", false)), "first concurrent battle starts")
 	_assert(bool(concurrent_b.start_stage(1, heroes).get("ok", false)), "second concurrent battle starts")
+	_assert(bool(Store.commit_idle_transition(PATH, catalog, chars, 1700000000, true)["ok"]), "pause saves during a running battle")
+	_assert(bool(Store.commit_idle_transition(PATH, catalog, chars, 1700003600, false)["ok"]), "resume freezes idle time during a running battle")
 	_assert(_win(concurrent_a) and _win(concurrent_b), "both competing sessions reach real victories")
 	_assert(bool(concurrent_a.settle_victory().get("ok", false)), "first concurrent settlement saves")
 	var ledger_after: Dictionary = Store.load_profile(PATH, catalog, chars)

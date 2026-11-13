@@ -44,6 +44,8 @@ func _ready() -> void:
 	_setup_theme()
 	_build()
 	var result: Dictionary = _model.initialize(save_path)
+	if bool(result.get("ok", false)):
+		result = _model.mark_foreground(_now_unix())
 	_ready_ok = bool(result.get("ok", false))
 	if _ready_ok:
 		# In the actual exported game, the project Autoload exists. Standalone

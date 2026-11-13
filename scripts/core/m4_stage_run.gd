@@ -149,8 +149,11 @@ func settle_victory() -> Dictionary:
 	if not bool(loaded.get("ok", false)):
 		return _result(false, str(loaded.get("reason", "profile_error")))
 	var current: Dictionary = loaded["profile"]
-	if int(current["revision"]) != _start_revision:
-		return _result(false, "stale_revision")
+	# Background/resume changes the checkpoint revision during a battle.
+	# Keep the battle valid only if the saved progression still matches.
+	for field in ["economy_state", "heroes", "loadouts", "highest_cleared_stage"]:
+		if current[field] != _profile[field]:
+			return _result(false, "stale_revision")
 	if not _unlocked(_stage, current):
 		return _result(false, "stage_locked")
 	var first_clear: bool = not current["economy_state"]["seen_events"].has(_clear_id(_stage))

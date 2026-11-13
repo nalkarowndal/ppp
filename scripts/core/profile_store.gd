@@ -211,27 +211,32 @@ static func commit_offline_claim(path: String, catalog: Dictionary, characters: 
 	var profile: Dictionary = loaded["profile"]
 	if profile["offline_checkpoint"].is_empty():
 		return _save_result(false, "no_checkpoint", profile)
+	if int(profile["offline_checkpoint"]["schema_version"]) == Idle.SCHEMA_VERSION:
+		return _save_result(false, "awaiting_resume", profile)
 	var result: Dictionary = Idle.try_claim(profile["offline_checkpoint"], profile["economy_state"], catalog, now_unix, balance)
 	if not bool(result.get("ok", false)):
 		return _save_result(false, str(result.get("reason", "invalid_claim")), profile)
 	var updated: Dictionary = profile.duplicate(true)
 	updated["economy_state"] = result["economy_state"]
-	updated["offline_checkpoint"] = result["checkpoint"]
+	updated["offline_checkpoint"] = {}
 	return save_profile(updated, catalog, characters, path)
 
-## Lifecycle adapter: call on a *genuine* background/exit transition using
-## trusted progress, and NEVER every frame. M3-6 will wire UI/platform hooks.
-static func commit_logout_checkpoint(path: String, catalog: Dictionary, characters: Array, exit_unix: Variant, stage: Variant) -> Dictionary:
+## Load the latest profile so lifecycle writes preserve M4 stage transactions.
+static func commit_idle_transition(path: String, catalog: Dictionary, characters: Array, epoch: Variant, background: bool) -> Dictionary:
 	var loaded: Dictionary = load_profile(path, catalog, characters)
 	if not bool(loaded["ok"]):
 		return _save_result(false, str(loaded["reason"]), {})
 	var profile: Dictionary = loaded["profile"]
-	var checkpoint: Dictionary = Idle.new_checkpoint(exit_unix, stage)
-	if checkpoint.is_empty() or int(checkpoint["stage"]) > int(profile["highest_cleared_stage"]):
-		return _save_result(false, "invalid_checkpoint", profile)
-	var updated: Dictionary = profile.duplicate(true)
-	updated["offline_checkpoint"] = checkpoint
-	return save_profile(updated, catalog, characters, path)
+	var pending: Dictionary = profile["offline_checkpoint"]
+	var checkpoint: Dictionary
+	if background:
+		checkpoint = Idle.begin_background(pending, epoch, int(profile["highest_cleared_stage"]), int(profile["revision"]) + 1)
+	else:
+		checkpoint = Idle.finish_background(pending, epoch)
+	if checkpoint.is_empty():
+		return _save_result(true, "unchanged_checkpoint", profile)
+	profile["offline_checkpoint"] = checkpoint
+	return save_profile(profile, catalog, characters, path)
 
 static func _encode(payload: Dictionary) -> String:
 	var payload_text: String = JSON.stringify(payload)
