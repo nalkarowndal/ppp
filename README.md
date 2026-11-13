@@ -2,7 +2,7 @@
 
 서브컬처 캐릭터 수집 × 픽셀아트 × 방치형 RPG. Godot 4 기반 게임 개발 프로젝트입니다.
 
-> 현재 상태: **M1 플랫폼 자동 검증 완료 범위는 있으나 실제 Windows/Android ARM64 기기 최종 QA 보류**. 별도 Draft PR #12·#13 및 M2-3 실험 브랜치에서 전투 코어·AI·즉시 스킬 효과를 단계별 검증 중입니다. 전체 게임이나 MVP가 구현된 상태가 아닙니다.
+> 현재 상태: M4 스테이지 수직슬라이스는 **M3 QA Draft PR #24 위의 실험 브랜치**에서 개발 중입니다. 10스테이지 자동전투·보상·육성·저장 프로토타입을 연결했지만 M1~M4 Windows GUI / Android ARM64 **물리 기기 승인과 최종 PR 병합은 여전히 보류**입니다. 완성 게임이나 릴리스가 아닙니다.
 
 ## 시작하기
 
@@ -88,3 +88,12 @@ Godot 없이 실행할 수 있는 Windows x64 개발용 `.exe`가 GitHub Actions
 - 실행: `godot --headless --path . --script res://tests/m2_battle_ui_test.gd`. [M2-5 QA 및 실제 Linux 렌더러 PNG 캡처 가이드](docs/qa/m2_5_battle_ui.md)를 참고하세요.
 - [Godot M2 Actions](https://github.com/nalkarowndal/ppp/actions/workflows/godot-m2-combat.yml)의 성공 실행 **Artifacts → m2-5-rendered-ui-preview**에서 360×800, 480×960 및 스크롤/전투 중 캡처를 다운로드할 수 있습니다. Linux 캡처의 한글 글리프는 Noto CJK 시스템 폰트 설치로 검증합니다. **Windows/Android 물리 기기 사진이 아닙니다**.
 - 본 프로젝트 `main` 및 과거 M1 QA 승인은 변경하지 않았고, [실기기 QA 이슈 #2](https://github.com/nalkarowndal/ppp/issues/2)와 M2 정식 출시 검토는 여전히 미완료입니다.
+
+## M4 실제 스테이지 플레이 루프 (별도 검토 브랜치)
+
+- 브랜치: `feature/m4-stage-reward-vertical-slice` (M3 물리 QA 준비 Draft 위에 쌓임). **main에는 아직 포함되지 않았습니다.**
+- Godot 4.7.2에서 시작 화면의 **M4 스테이지 모험 시작**을 클릭해 10개 스테이지 중 해제된 전투에 진입합니다. 초기 전투 파티는 아리아·세레나·레온 3명이며, M3에서 성장·장비를 바꾼 뒤 다시 시작하면 실제 능력치에 반영됩니다.
+- 20Hz M2 전투가 실제 승리한 뒤에만 보상을 수령하며, 최초 클리어 장비는 1회 한정으로 발급합니다. 재도전은 재화만 지급합니다. 지급 결과/거래 영수증과 최고 스테이지는 M3 체크섬·백업 프로필 저장에 포함됩니다.
+- QA: `godot --headless --path . --script res://tests/m4_stage_loop_test.gd`, `godot --headless --path . --script res://tests/m4_stage_ui_test.gd`. [M4 Actions](https://github.com/nalkarowndal/ppp/actions/workflows/godot-m4-stage.yml)의 아티팩트에서 Linux Xvfb 360×800·480×960 렌더 PNG 및 로그를 확인할 수 있습니다.
+- 단계별 구현/누락 기능: [M4 QA 보고서](docs/qa/m4_stage_vertical_slice.md). 고정된 10개 샘플 스테이지·3종 일반 적은 정식 40스테이지/보스/던전이 아니며, 서버 검증·결제·정식 그래픽과 소리는 미구현입니다.
+- 중요한 미승인 항목: [실제 PC/휴대전화 검수 #2](https://github.com/nalkarowndal/ppp/issues/2)와 [오프라인 보상 foreground 누적 문제 #25](https://github.com/nalkarowndal/ppp/issues/25). M4 자동화가 통과해도 이를 완료했다고 간주하지 않습니다.

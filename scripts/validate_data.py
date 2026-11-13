@@ -22,7 +22,7 @@ def check():
     equipment = read("equipment.json")
     assert len(chars) == 8, "MVP roster should contain 8 planned characters"
     assert len(skills) == 16, "8 active + 8 ultimate skill definitions required"
-    assert len(stages) == 10, "M4 vertical slice should list 10 planned stages"
+    assert len(stages) == 10, "M4 vertical slice should contain 10 enabled stages"
     for collection in (chars, skills, enemies, stages):
         ids = [item["id"] for item in collection]
         assert len(ids) == len(set(ids)), f"duplicate ID in {ids}"
@@ -35,7 +35,9 @@ def check():
         assert all(isinstance(stats[k], (int, float)) and stats[k] > 0 for k in ("hp", "atk", "def", "spd"))
         assert 0 <= stats["crit"] <= 0.75
         assert set(char["skill_ids"]).issubset(skill_ids)
-    for stage in stages:
+    for index, stage in enumerate(stages, start=1):
+        assert stage["stage"] == index and stage["id"] == f"STG_{index:03d}"
+        assert stage["status"] == "m4_vertical_slice_enabled"
         assert set(stage["enemy_ids"]).issubset(enemy_ids)
     assert len(equipment) >= 6, "M3-2 equipment catalog requires six prototype templates"
     item_ids = [entry["id"] for entry in equipment]
@@ -56,7 +58,7 @@ def check():
     assert 0.0 < balance["offline_efficiency"] <= 1.0
     assert 100 + 16 * 99 + 4 * 99 * 99 == 40888
     assert 60 + 10 * 99 + 2 * 99 * 99 == 20652
-    print("PASS: 8 characters, 16 spec-only skills, 3 enemies, 10 planned stages, balance formulas")
+    print("PASS: 8 characters, 16 spec-only skills, 3 enemies, 10 M4 enabled stages, balance formulas")
 
 
 if __name__ == "__main__":
