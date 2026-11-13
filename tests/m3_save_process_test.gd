@@ -38,6 +38,9 @@ func _initialize() -> void:
 		if not bool(loaded["ok"]) or int(loaded["profile"]["economy_state"]["wallet"]["gold"]) != 35:
 			_fail("process reboot lost currency")
 			return
+		if not bool(Save.commit_idle_transition(PATH, catalog, chars, T0 + 3600, false)["ok"]):
+			_fail("process reboot failed to settle offline time")
+			return
 		var paid: Dictionary = Save.commit_offline_claim(PATH, catalog, chars, T0 + 3600, balance)
 		if not bool(paid["ok"]) or int(paid["profile"]["economy_state"]["wallet"]["gold"]) != 195:
 			_fail("process reboot failed offline claim")

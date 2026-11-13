@@ -82,6 +82,13 @@ jobs:
           Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script res://tests/m3_ui_controller_test.gd 2>&1 | tee qa_artifacts/m3_ui_controller.log
           grep -Fq "M3-6 CONTROLLER PASS:" qa_artifacts/m3_ui_controller.log
           if grep -E 'SCRIPT ERROR|Parse Error|ERROR:|M3-6 FAIL:' qa_artifacts/m3_ui_controller.log; then exit 1; fi
+      - name: Verify simulated M3 unpaid offline checkpoint regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script res://tests/m3_pending_idle_lifecycle_test.gd 2>&1 | tee qa_artifacts/m3_device_gate.log
+          grep -Fq "M3 IDLE LIFECYCLE PASS:" qa_artifacts/m3_device_gate.log
+          if grep -E 'SCRIPT ERROR|Parse Error|ERROR:|M3 IDLE LIFECYCLE FAIL:' qa_artifacts/m3_device_gate.log; then exit 1; fi
       - name: Run M3-6 portrait UI integration suite
         shell: bash
         run: |
@@ -89,6 +96,12 @@ jobs:
           Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script res://tests/m3_ui_integration_test.gd 2>&1 | tee qa_artifacts/m3_ui.log
           grep -Fq "M3-6 UI PASS:" qa_artifacts/m3_ui.log
           if grep -E 'SCRIPT ERROR|Parse Error|ERROR:|M3-6 UI FAIL:' qa_artifacts/m3_ui.log; then exit 1; fi
+      - name: Validate non-destructive physical Android QA harness syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash -n scripts/qa/m3_android_arm64_physical_qa.sh
+          bash scripts/qa/m3_android_arm64_physical_qa.sh --validate-only
       - name: Prepare Xvfb portrait UI renderer and Korean font
         shell: bash
         run: |

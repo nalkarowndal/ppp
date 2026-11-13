@@ -17,6 +17,7 @@ var _profile: Dictionary = {}
 var _selected_id: String = "CHR_ARIA"
 
 func initialize(profile_path: String = Store.SAVE_PATH) -> Dictionary:
+	_profile = {}
 	_path = profile_path
 	_characters = Repo.load_array("res://data/characters.json")
 	_catalog = Gear.build_catalog(Repo.load_array("res://data/equipment.json"))
@@ -149,6 +150,8 @@ func preview_idle(now_unix: Variant) -> Dictionary:
 		return {"ok": false, "reason": "not_initialized"}
 	if _profile["offline_checkpoint"].is_empty():
 		return {"ok": false, "reason": "no_checkpoint"}
+	if int(_profile["offline_checkpoint"]["schema_version"]) == Idle.SCHEMA_VERSION:
+		return {"ok": false, "reason": "awaiting_resume"}
 	return Idle.preview(_profile["offline_checkpoint"], now_unix, _balance)
 
 ## Call only when user explicitly accepts an available reward.
@@ -161,23 +164,20 @@ func claim_idle(now_unix: Variant) -> Dictionary:
 	_profile = payout["profile"]
 	return _result(true, "ok")
 
-## OS pause/close notification (not a focus change). Avoid duplicating a
-## receipt key for a checkpoint recorded in the same UTC second.
 func mark_background(exit_unix: Variant) -> Dictionary:
+	return _transition_idle(exit_unix, true)
+
+func mark_foreground(resume_unix: Variant) -> Dictionary:
+	return _transition_idle(resume_unix, false)
+
+func _transition_idle(epoch: Variant, background: bool) -> Dictionary:
 	if _profile.is_empty():
 		return _result(false, "not_initialized")
-	if typeof(exit_unix) != TYPE_INT and typeof(exit_unix) != TYPE_FLOAT:
-		return _result(false, "invalid_time")
-	if not _profile["offline_checkpoint"].is_empty():
-		if int(exit_unix) <= int(_profile["offline_checkpoint"]["last_exit_unix"]):
-			return _result(false, "unchanged_checkpoint")
-	var checkpoint: Dictionary = Store.commit_logout_checkpoint(
-		_path, _catalog, _characters, exit_unix, int(_profile["highest_cleared_stage"])
-	)
-	if not bool(checkpoint.get("ok", false)):
-		return _result(false, str(checkpoint.get("reason", "invalid_checkpoint")))
-	_profile = checkpoint["profile"]
-	return _result(true, "ok")
+	var operation: Dictionary = Store.commit_idle_transition(_path, _catalog, _characters, epoch, background)
+	if not bool(operation["ok"]):
+		return _result(false, str(operation["reason"]))
+	_profile = operation["profile"]
+	return _result(true, str(operation["reason"]))
 
 func _receipt(action: String) -> String:
 	return "ui:%s:%s:%d" % [action, _selected_id, int(_profile["revision"])]
