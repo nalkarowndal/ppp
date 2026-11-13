@@ -220,7 +220,7 @@ func _build_idle(root: VBoxContainer) -> void:
 	_idle_summary = _label(panel, "", 15, IVORY)
 	_claim_button = _button(panel, "방치 보상 수령", "M3IdleClaimButton")
 	_claim_button.pressed.connect(_on_claim_pressed)
-	_label(panel, "보상은 마지막 종료 시점의 스테이지로 계산됩니다. 실제 스테이지 클리어 보상 연동은 M4에서 확장됩니다.", 12, MUTED)
+	_label(panel, "미수령 보상은 첫 방치 시작 시점의 스테이지로 계산됩니다.", 12, MUTED)
 
 func _apply_safe_area() -> void:
 	if _safe == null:

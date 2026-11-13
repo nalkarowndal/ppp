@@ -228,6 +228,13 @@ static func commit_idle_transition(path: String, catalog: Dictionary, characters
 		return _save_result(false, str(loaded["reason"]), {})
 	var profile: Dictionary = loaded["profile"]
 	var pending: Dictionary = profile["offline_checkpoint"]
+	# V1 used the claim time as a new anchor. After a prior claim the
+	# legacy save cannot prove that a subsequent real pause occurred.
+	if not background and int(pending.get("schema_version", 0)) == Idle.SCHEMA_VERSION:
+		for event_id in profile["economy_state"]["seen_events"]:
+			if str(event_id).begins_with("offline:"):
+				profile["offline_checkpoint"] = {}
+				return save_profile(profile, catalog, characters, path)
 	var checkpoint: Dictionary
 	if background:
 		checkpoint = Idle.begin_background(pending, epoch, int(profile["highest_cleared_stage"]), int(profile["revision"]) + 1)

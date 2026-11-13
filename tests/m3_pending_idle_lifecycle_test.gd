@@ -60,6 +60,13 @@ func _initialize() -> void:
 	_check(bool(controller.claim_idle(T0 + 55000)["ok"]), "second payout succeeds")
 	_check(int(controller.snapshot()["economy_state"]["wallet"]["gold"]) == 1600, "second payout added exactly once")
 	_check(controller.snapshot()["economy_state"]["seen_events"].size() == 2, "two distinct durable receipts")
+	var legacy_after_claim: Dictionary = controller.snapshot()
+	legacy_after_claim["offline_checkpoint"] = Idle.new_checkpoint(T0 + 55000, 1)
+	_check(bool(Store.save_profile(legacy_after_claim, catalog, chars, PATH)["ok"]), "legacy post-claim save fixture")
+	_check(bool(restart.initialize(PATH)["ok"]), "legacy post-claim save opens")
+	_check(bool(restart.mark_foreground(T0 + 58600)["ok"]), "ambiguous legacy anchor is retired")
+	_check(not bool(restart.claim_idle(T0 + 58600)["ok"]), "legacy claim time cannot create a payout")
+	_check(int(restart.snapshot()["economy_state"]["wallet"]["gold"]) == 1600, "legacy migration preserves wallet")
 	_finish()
 
 func _check(valid: bool, label: String) -> void:
